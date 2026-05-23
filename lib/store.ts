@@ -150,37 +150,3 @@ export async function getTicketImage(token: string): Promise<Buffer | null> {
 export async function deleteTicketImage(token: string): Promise<void> {
   await redis.del(`${TICKET_IMG_PREFIX}${token}`)
 }
-
-const SESSION_PREFIX = "session:"
-const SESSION_TTL = 60 * 60 * 24
-
-export async function createSession(): Promise<string> {
-  const { randomUUID } = await import("crypto")
-  const sessionId = randomUUID()
-  await redis.set(`${SESSION_PREFIX}${sessionId}`, "1", { ex: SESSION_TTL })
-  return sessionId
-}
-
-export async function validateSession(sessionId: string): Promise<boolean> {
-  const val = await redis.get(`${SESSION_PREFIX}${sessionId}`)
-  return val === "1"
-}
-
-export async function deleteSession(sessionId: string): Promise<void> {
-  await redis.del(`${SESSION_PREFIX}${sessionId}`)
-}
-
-const LOGIN_ATTEMPTS_PREFIX = "login_attempts:"
-
-export async function checkRateLimit(ip: string): Promise<boolean> {
-  const key = `${LOGIN_ATTEMPTS_PREFIX}${ip}`
-  const count = await redis.get<number>(key)
-  if (count && count >= 5) return false
-  await redis.incr(key)
-  await redis.expire(key, 60)
-  return true
-}
-
-export async function resetRateLimit(ip: string): Promise<void> {
-  await redis.del(`${LOGIN_ATTEMPTS_PREFIX}${ip}`)
-}
