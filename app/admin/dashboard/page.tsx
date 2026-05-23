@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
-import { CheckCircle, Clock, Package, DollarSign, Trash2, RotateCcw } from "lucide-react"
+import { CheckCircle, Clock, Package, DollarSign, Trash2, RotateCcw, X } from "lucide-react"
 import type { Order } from "@/types"
 
 function formatPrice(cents: number): string {
@@ -63,6 +63,12 @@ export default function AdminDashboard() {
       setToast(null)
       fetchOrders()
     }
+  }
+
+  async function deletePendingOrder(orderId: string) {
+    if (!confirm("Excluir este pedido pendente?")) return
+    const res = await fetch(`/api/orders?id=${orderId}`, { method: "DELETE" })
+    if (res.ok) fetchOrders()
   }
 
   useEffect(() => {
@@ -141,12 +147,21 @@ export default function AdminDashboard() {
                     <p key={i}>{item.quantity}x {item.productName}</p>
                   ))}
                 </div>
-                <button
-                  onClick={() => approveOrder(order.id, order.customerName)}
-                  className="btn-primary text-sm py-2"
-                >
-                  Aprovar Pagamento
-                </button>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => approveOrder(order.id, order.customerName)}
+                    className="btn-primary text-sm py-2 flex-1"
+                  >
+                    Aprovar Pagamento
+                  </button>
+                  <button
+                    onClick={() => deletePendingOrder(order.id)}
+                    className="w-10 h-10 border border-red-400/30 rounded-xl flex items-center justify-center text-red-400 hover:bg-red-400/10 shrink-0"
+                    title="Excluir pedido"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
             ))}
           </div>

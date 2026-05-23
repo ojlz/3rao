@@ -89,6 +89,10 @@ export async function updateOrder(id: string, updates: Partial<Order>): Promise<
   return updated
 }
 
+export async function deleteOrder(id: string): Promise<void> {
+  await redis.hdel(ORDERS_KEY, id)
+}
+
 export async function saveTicket(ticket: { orderId: string; token: string; customerName: string; items: OrderItem[]; totalPrice: number; status: string; qrData: string; createdAt: string }): Promise<void> {
   const key = `ticket:${ticket.token}`
   await redis.set(key, JSON.stringify(ticket))

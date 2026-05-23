@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { getAllOrders, getOrder } from "@/lib/store"
+import { getAllOrders, getOrder, deleteOrder, deleteTicket, deleteTicketImage } from "@/lib/store"
 import { checkAuth } from "@/lib/auth"
 
 export async function GET(request: Request) {
@@ -25,4 +25,31 @@ export async function GET(request: Request) {
 
   const orders = await getAllOrders()
   return NextResponse.json({ orders })
+}
+
+export async function DELETE(request: Request) {
+  if (!(await checkAuth())) {
+    return NextResponse.json({ error: "Não autorizado" }, { status: 401 })
+  }
+
+  const { searchParams } = new URL(request.url)
+  const id = searchParams.get("id")
+
+  if (!id) {
+    return NextResponse.json({ error: "ID obrigatório" }, { status: 400 })
+  }
+
+  const order = await getOrder(id)
+  if (!order) {
+    return NextResponse.json({ error: "Pedido não encontrado" }, { status: 404 })
+  }
+  if (order.status !== "pending") {
+    return NextResponse.json({ error: "Só é possível excluir pedidos pendentes" }, { status: 400 })
+  }
+
+  await deleteTicket(order.token)
+  await deleteTicketImage(order.token)
+  await deleteOrder(id)
+
+  return NextResponse.json({ success: true })
 }
