@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { CheckCircle, Clock, Package, Trash2 } from "lucide-react"
+import { CheckCircle, Clock, Package, DollarSign, Trash2 } from "lucide-react"
 import type { Order } from "@/types"
 
 function formatPrice(cents: number): string {
@@ -53,6 +53,7 @@ export default function AdminDashboard() {
   const pending = orders.filter((o) => o.status === "pending")
   const approved = orders.filter((o) => o.status === "approved")
   const delivered = orders.filter((o) => o.status === "delivered")
+  const revenue = [...approved, ...delivered].reduce((acc, o) => acc + o.totalPrice, 0)
 
   return (
     <div className="min-h-screen pb-20">
@@ -72,7 +73,7 @@ export default function AdminDashboard() {
 
       <main className="max-w-4xl mx-auto px-4 py-6">
 
-        <div className="grid grid-cols-3 gap-3 mb-6">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
           <div className="card text-center py-4">
             <Clock className="w-5 h-5 text-yellow-400 mx-auto mb-1" />
             <p className="text-2xl font-bold text-bege">{pending.length}</p>
@@ -87,6 +88,11 @@ export default function AdminDashboard() {
             <Package className="w-5 h-5 text-blue-400 mx-auto mb-1" />
             <p className="text-2xl font-bold text-bege">{delivered.length}</p>
             <p className="text-[10px] text-marrom uppercase tracking-wide">Entregues</p>
+          </div>
+          <div className="card text-center py-4 border-green-500/20">
+            <DollarSign className="w-5 h-5 text-green-400 mx-auto mb-1" />
+            <p className="text-2xl font-bold text-bege">{formatPrice(revenue)}</p>
+            <p className="text-[10px] text-marrom uppercase tracking-wide">Faturamento</p>
           </div>
         </div>
 
