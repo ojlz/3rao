@@ -2,7 +2,6 @@ import { NextResponse } from "next/server"
 import { cookies } from "next/headers"
 import { getOrder, updateOrder, saveTicket, saveTicketImage } from "@/lib/store"
 import { generateTicket } from "@/services/ticketGenerator"
-import { sendImage, sendText, isConfigured } from "@/services/whatsappCloud"
 
 const EVENT_DATE = process.env.EVENT_DATE || "3 de junho"
 
@@ -35,9 +34,6 @@ export async function POST(request: Request) {
     })
 
     const ticketBuffer = await generateTicket(order, EVENT_DATE)
-    const baseUrl = process.env.VERCEL_URL
-      ? `https://${process.env.VERCEL_URL}`
-      : `http://localhost:${process.env.PORT || 3000}`
 
     await saveTicket({
       orderId: order.id,
@@ -52,20 +48,13 @@ export async function POST(request: Request) {
 
     await saveTicketImage(order.token, ticketBuffer)
 
-    let whatsappSent = false
-    if (isConfigured()) {
-      const caption = `✅ Pedido Aprovado!\n\nPedido: ${order.id}\nCliente: ${order.customerName}\nTotal: R$ ${(order.totalPrice / 100).toFixed(2).replace(".", ",")}\n\nApresente o QR Code no dia ${EVENT_DATE} para retirar seus espetinhos!`
-      const imageUrl = `${baseUrl}/api/ticket-image/${order.token}`
-      whatsappSent = await sendImage(order.customerPhone, imageUrl, caption)
-    }
-
-    await updateOrder(orderId, { whatsappSent })
+    await updateOrder(orderId, { whatsappSent: false })
 
     return NextResponse.json({
       success: true,
       orderId: order.id,
       status: "approved",
-      whatsappSent,
+      whatsappSent: false,
     })
   } catch (error) {
     console.error("Approve error:", error)
