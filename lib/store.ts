@@ -29,6 +29,18 @@ export async function deleteProduct(id: string): Promise<void> {
   await redis.hdel(PRODUCTS_KEY, id)
 }
 
+export async function reorderProducts(ids: string[]): Promise<void> {
+  const products = await getProducts()
+  const productMap = new Map(products.map((p) => [p.id, p]))
+  for (let i = 0; i < ids.length; i++) {
+    const product = productMap.get(ids[i])
+    if (product) {
+      product.order = i
+      await saveProduct(product)
+    }
+  }
+}
+
 export async function createOrder(
   customerName: string,
   customerPhone: string,

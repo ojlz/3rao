@@ -7,6 +7,7 @@ export interface Product {
   category: string
   complements: Complement[]
   available: boolean
+  order: number
   createdAt: string
 }
 

@@ -87,7 +87,10 @@ export default function Home() {
     fetch("/api/products")
       .then((r) => r.json())
       .then((data) => {
-        setProducts(data.products.filter((p: Product) => p.available))
+        const sorted = (data.products as Product[])
+          .filter((p) => p.available)
+          .sort((a, b) => a.order - b.order)
+        setProducts(sorted)
         setLoading(false)
       })
       .catch(() => setLoading(false))
