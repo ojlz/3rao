@@ -18,10 +18,11 @@ export async function POST(request: Request) {
     if (password === process.env.ADMIN_PASSWORD) {
       await resetRateLimit(ip)
       const sessionId = await createSession()
+      const isSecure = request.headers.get("x-forwarded-proto") !== "http" && process.env.NODE_ENV === "production"
       const response = NextResponse.json({ success: true })
       response.cookies.set("admin_session", sessionId, {
         httpOnly: true,
-        secure: true,
+        secure: isSecure,
         sameSite: "strict",
         maxAge: 60 * 60 * 24,
         path: "/",
