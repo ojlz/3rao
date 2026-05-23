@@ -6,3 +6,4 @@ node_modules
 next-env.d.ts
 .wwebjs_auth
 .wwebjs_cache
+tmp_*.mjs
