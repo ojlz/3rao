@@ -1,18 +1,12 @@
 import { NextResponse } from "next/server"
-import { cookies } from "next/headers"
 import { getOrder, updateOrder, saveTicket, saveTicketImage } from "@/lib/store"
 import { generateTicket } from "@/services/ticketGenerator"
+import { checkAuth } from "@/lib/auth"
 
 const EVENT_DATE = process.env.EVENT_DATE || "3 de junho"
 
-function checkAuth(): boolean {
-  const cookieStore = cookies()
-  const session = cookieStore.get("admin_session")
-  return session?.value === process.env.ADMIN_PASSWORD
-}
-
 export async function POST(request: Request) {
-  if (!checkAuth()) {
+  if (!(await checkAuth())) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 })
   }
 

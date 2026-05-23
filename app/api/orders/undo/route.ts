@@ -1,15 +1,9 @@
 import { NextResponse } from "next/server"
-import { cookies } from "next/headers"
 import { getOrder, updateOrder, deleteTicket, deleteTicketImage } from "@/lib/store"
-
-function checkAuth(): boolean {
-  const cookieStore = cookies()
-  const session = cookieStore.get("admin_session")
-  return session?.value === process.env.ADMIN_PASSWORD
-}
+import { checkAuth } from "@/lib/auth"
 
 export async function POST(request: Request) {
-  if (!checkAuth()) {
+  if (!(await checkAuth())) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 })
   }
 

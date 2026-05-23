@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useParams, useSearchParams } from "next/navigation"
+import { useParams } from "next/navigation"
 import { motion } from "framer-motion"
 import QRCode from "qrcode"
 import { Check, Clock, Package, Copy, Download } from "lucide-react"
@@ -26,9 +26,14 @@ function copyToClipboard(text: string): Promise<boolean> {
   }
 }
 
+function getOrderUrl(orderId: string): string {
+  const token = sessionStorage.getItem(`order_token_${orderId}`)
+  if (!token) return `${window.location.origin}/pedido/${orderId}`
+  return `${window.location.origin}/pedido/${orderId}?token=${token}`
+}
+
 export default function OrderPage() {
   const params = useParams()
-  const searchParams = useSearchParams()
   const [order, setOrder] = useState<Order | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
@@ -37,10 +42,25 @@ export default function OrderPage() {
 
   useEffect(() => {
     const id = params.id as string
-    const token = searchParams.get("token")
+    const urlParams = new URLSearchParams(window.location.search)
+    const tokenFromUrl = urlParams.get("token")
 
-    if (!id || !token) {
+    if (!id) {
       setError("Link inválido")
+      setLoading(false)
+      return
+    }
+
+    let token = tokenFromUrl || sessionStorage.getItem(`order_token_${id}`)
+
+    if (tokenFromUrl) {
+      sessionStorage.setItem(`order_token_${id}`, tokenFromUrl)
+      token = tokenFromUrl
+      window.history.replaceState({}, "", `/pedido/${id}`)
+    }
+
+    if (!token) {
+      setError("Link inválido. Use o link original que você salvou.")
       setLoading(false)
       return
     }
@@ -66,7 +86,7 @@ export default function OrderPage() {
         setError("Erro ao carregar pedido")
         setLoading(false)
       })
-  }, [params.id, searchParams])
+  }, [params.id])
 
   if (loading) {
     return (
@@ -239,11 +259,11 @@ export default function OrderPage() {
           </p>
           <div className="flex items-center gap-2 bg-marrom/10 rounded-lg p-3">
             <code className="flex-1 text-xs font-mono text-bege break-all select-all">
-              {typeof window !== "undefined" && `${window.location.origin}/pedido/${order.id}?token=${order.token}`}
+              {getOrderUrl(order.id)}
             </code>
             <button
               onClick={async () => {
-                const url = typeof window !== "undefined" ? `${window.location.origin}/pedido/${order.id}?token=${order.token}` : order.token
+                const url = getOrderUrl(order.id)
                 const ok = await copyToClipboard(url)
                 if (ok) {
                   setCopied(true)

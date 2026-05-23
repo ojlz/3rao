@@ -1,13 +1,7 @@
 import { NextResponse } from "next/server"
-import { cookies } from "next/headers"
 import { getProducts, getProduct, saveProduct, deleteProduct, reorderProducts } from "@/lib/store"
+import { checkAuth } from "@/lib/auth"
 import type { Product } from "@/types"
-
-function checkAuth(): boolean {
-  const cookieStore = cookies()
-  const session = cookieStore.get("admin_session")
-  return session?.value === process.env.ADMIN_PASSWORD
-}
 
 export async function GET() {
   const products = await getProducts()
@@ -16,7 +10,7 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  if (!checkAuth()) {
+  if (!(await checkAuth())) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 })
   }
 
@@ -59,7 +53,7 @@ export async function POST(request: Request) {
 }
 
 export async function PUT(request: Request) {
-  if (!checkAuth()) {
+  if (!(await checkAuth())) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 })
   }
 
@@ -79,7 +73,7 @@ export async function PUT(request: Request) {
 }
 
 export async function DELETE(request: Request) {
-  if (!checkAuth()) {
+  if (!(await checkAuth())) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 })
   }
 

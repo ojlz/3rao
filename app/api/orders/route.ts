@@ -1,13 +1,6 @@
 import { NextResponse } from "next/server"
-import { cookies } from "next/headers"
 import { getAllOrders, getOrder } from "@/lib/store"
-import type { Order } from "@/types"
-
-function checkAuth(): boolean {
-  const cookieStore = cookies()
-  const session = cookieStore.get("admin_session")
-  return session?.value === process.env.ADMIN_PASSWORD
-}
+import { checkAuth } from "@/lib/auth"
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
@@ -22,10 +15,11 @@ export async function GET(request: Request) {
     if (order.token !== token) {
       return NextResponse.json({ error: "Token inválido" }, { status: 401 })
     }
-    return NextResponse.json({ order })
+    const { token: _, ...safeOrder } = order
+    return NextResponse.json({ order: safeOrder })
   }
 
-  if (!checkAuth()) {
+  if (!(await checkAuth())) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 })
   }
 

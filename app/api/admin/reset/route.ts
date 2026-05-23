@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server"
-import { cookies } from "next/headers"
 import { redis } from "@/lib/redis"
+import { checkAuth } from "@/lib/auth"
 
 export async function POST() {
-  const cookieStore = cookies()
-  const session = cookieStore.get("admin_session")
-  if (session?.value !== process.env.ADMIN_PASSWORD) {
+  if (!(await checkAuth())) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 })
   }
+
+  console.warn("ADMIN RESET triggered at", new Date().toISOString())
 
   await redis.del("orders")
 

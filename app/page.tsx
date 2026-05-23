@@ -291,6 +291,7 @@ export default function Home() {
       setOrderResult(data)
       setStep("success")
 
+      sessionStorage.setItem(`order_token_${data.orderId}`, data.token)
       const link = `${window.location.origin}/pedido/${data.orderId}?token=${data.token}`
       try {
         await navigator.clipboard.writeText(link)
@@ -676,7 +677,7 @@ export default function Home() {
               </p>
               <div className="mt-3 flex gap-2">
                 <a
-                  href={`/pedido/${orderResult.orderId}?token=${orderResult.token}`}
+                  href={`/pedido/${orderResult.orderId}`}
                   className="btn-secondary text-sm py-2 flex-1 text-center"
                 >
                   Acompanhar
