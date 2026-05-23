@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { ShoppingCart, Plus, Minus, Check, Send, Phone, User, ChevronRight, Shield, Copy, ImageOff } from "lucide-react"
+import { ShoppingCart, Plus, Minus, Check, Send, Phone, User, ChevronRight, Shield, Copy, ImageOff, Scale } from "lucide-react"
 import type { Product, OrderItem } from "@/types"
 
 function formatPrice(cents: number): string {
@@ -17,7 +17,15 @@ function LoadingScreen() {
         animate={{ opacity: 1, scale: 1 }}
         className="text-center"
       >
-        <h1 className="text-3xl font-bold text-bege mb-4">Espetão do Terceirão</h1>
+        <motion.div
+          animate={{ rotate: [0, 10, 0, -10, 0] }}
+          transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
+          className="w-14 h-14 bg-bordo/20 rounded-full flex items-center justify-center mx-auto mb-4"
+        >
+          <Scale className="w-7 h-7 text-bege" />
+        </motion.div>
+        <h1 className="text-3xl font-bold text-bege mb-2">Espetão do Terceirão</h1>
+        <p className="text-sm text-marrom mb-4">Terceirão</p>
         <div className="flex gap-2 justify-center">
           <motion.div className="w-3 h-3 bg-bordo rounded-full loading-dot" />
           <motion.div className="w-3 h-3 bg-bordo rounded-full loading-dot" />
@@ -290,6 +298,7 @@ export default function Home() {
       }
       setOrderResult(data)
       setStep("success")
+      setCart(new Map())
 
       sessionStorage.setItem(`order_token_${data.orderId}`, data.token)
       const link = `${window.location.origin}/pedido/${data.orderId}?token=${data.token}`
@@ -310,8 +319,11 @@ export default function Home() {
       <header className="sticky top-0 z-40 bg-[#1D150D]/95 backdrop-blur-sm border-b border-marrom/30">
         <div className="max-w-lg mx-auto px-4 py-3 flex items-center justify-between">
           <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }}>
-            <h1 className="text-lg font-bold text-bege">Espetão do Terceirão</h1>
-            <p className="text-[10px] text-marrom tracking-wide uppercase">Pré-venda de espetinhos</p>
+            <div className="flex items-center gap-2">
+              <Scale className="w-4 h-4 text-bordo" />
+              <h1 className="text-lg font-bold text-bege">Espetão do Terceirão</h1>
+            </div>
+            <p className="text-[10px] text-marrom tracking-wide uppercase">Pré-venda · Terceirão</p>
           </motion.div>
           <div className="flex items-center gap-2">
             <motion.a
@@ -347,7 +359,8 @@ export default function Home() {
       <main className="max-w-lg mx-auto px-4 pt-6">
         {step === "products" && (
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2 mb-4">
+              <Scale className="w-4 h-4 text-bordo" />
               <h2 className="text-lg font-semibold text-bege">Cardápio</h2>
             </div>
 

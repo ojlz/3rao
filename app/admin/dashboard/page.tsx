@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
-import { CheckCircle, Clock, Package, DollarSign, Trash2, RotateCcw, X } from "lucide-react"
+import { CheckCircle, Clock, Package, DollarSign, Trash2, RotateCcw, X, Scale } from "lucide-react"
 import type { Order } from "@/types"
 
 function formatPrice(cents: number): string {
@@ -88,7 +88,10 @@ export default function AdminDashboard() {
     <div className="min-h-screen pb-20">
       <header className="sticky top-0 z-40 bg-[#1D150D]/95 backdrop-blur-sm border-b border-marrom/30">
         <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
-          <h1 className="text-lg font-bold text-bege">Admin</h1>
+          <div className="flex items-center gap-2">
+            <Scale className="w-4 h-4 text-bordo" />
+            <h1 className="text-lg font-bold text-bege">Admin</h1>
+          </div>
           <nav className="flex gap-2 text-xs items-center">
             <a href="/admin/dashboard" className="text-bege">Dashboard</a>
             <a href="/admin/products" className="text-marrom hover:text-bege">Produtos</a>

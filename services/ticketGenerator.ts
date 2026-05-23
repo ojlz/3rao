@@ -15,6 +15,7 @@ export async function generateTicket(order: Order, eventDate: string): Promise<B
 
   const textLines = [
     { text: "FICHA ESPETÃO DO TERCEIRÃO", size: 28, weight: "bold" as const },
+    { text: "Terceirão", size: 16 },
     { text: "", size: 12 },
     { text: `Pedido: ${order.id}`, size: 18 },
     { text: `Cliente: ${order.customerName}`, size: 18 },

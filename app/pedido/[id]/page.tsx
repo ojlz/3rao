@@ -1,10 +1,10 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useParams } from "next/navigation"
 import { motion } from "framer-motion"
 import QRCode from "qrcode"
-import { Check, Clock, Package, Copy, Download } from "lucide-react"
+import { Check, Clock, Package, Copy, Download, RefreshCw, Scale } from "lucide-react"
 import type { Order } from "@/types"
 
 function copyToClipboard(text: string): Promise<boolean> {
@@ -39,6 +39,31 @@ export default function OrderPage() {
   const [error, setError] = useState("")
   const [qrDataUrl, setQrDataUrl] = useState("")
   const [copied, setCopied] = useState(false)
+  const orderToken = useRef<string>("")
+
+  function fetchOrder(id: string, token: string) {
+    fetch(`/api/orders?id=${id}&token=${token}`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.error) {
+          setError(data.error)
+        } else {
+          setOrder(data.order)
+          if (data.order.status === "approved" || data.order.status === "delivered") {
+            QRCode.toDataURL(token, {
+              width: 300,
+              margin: 2,
+              color: { dark: "#1D150D", light: "#E8D5B7" },
+            }).then(setQrDataUrl)
+          }
+        }
+        setLoading(false)
+      })
+      .catch(() => {
+        setError("Erro ao carregar pedido")
+        setLoading(false)
+      })
+  }
 
   useEffect(() => {
     const id = params.id as string
@@ -65,28 +90,23 @@ export default function OrderPage() {
       return
     }
 
-    fetch(`/api/orders?id=${id}&token=${token}`)
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.error) {
-          setError(data.error)
-        } else {
-          setOrder(data.order)
-          if (data.order.status === "approved" || data.order.status === "delivered") {
-            QRCode.toDataURL(token, {
-              width: 300,
-              margin: 2,
-              color: { dark: "#1D150D", light: "#E8D5B7" },
-            }).then(setQrDataUrl)
-          }
-        }
-        setLoading(false)
-      })
-      .catch(() => {
-        setError("Erro ao carregar pedido")
-        setLoading(false)
-      })
+    orderToken.current = token
+    fetchOrder(id, token)
   }, [params.id])
+
+  useEffect(() => {
+    if (!order || order.status !== "pending") return
+
+    const id = params.id as string
+    const token = orderToken.current
+    if (!token) return
+
+    const interval = setInterval(() => {
+      fetchOrder(id, token)
+    }, 7000)
+
+    return () => clearInterval(interval)
+  }, [order?.status, params.id])
 
   if (loading) {
     return (
@@ -125,7 +145,10 @@ export default function OrderPage() {
     <div className="min-h-screen">
       <header className="sticky top-0 z-40 bg-[#1D150D]/95 backdrop-blur-sm border-b border-marrom/30">
         <div className="max-w-lg mx-auto px-4 py-3 flex items-center justify-between">
-          <h1 className="text-base font-bold text-bege">Pedido #{order.id}</h1>
+          <div className="flex items-center gap-2">
+            <Scale className="w-4 h-4 text-bordo" />
+            <h1 className="text-base font-bold text-bege">Pedido #{order.id}</h1>
+          </div>
           <a
             href="/"
             className="text-xs text-marrom hover:text-bege transition"
@@ -151,7 +174,7 @@ export default function OrderPage() {
               order.status === "delivered" ? "bg-blue-400/20" : "bg-red-400/20"
             }`}
           >
-            {order.status === "pending" && <Clock className="w-6 h-6 text-yellow-400" />}
+            {order.status === "pending" && <RefreshCw className="w-6 h-6 text-yellow-400" />}
             {order.status === "approved" && <Check className="w-6 h-6 text-green-400" />}
             {order.status === "delivered" && <Package className="w-6 h-6 text-blue-400" />}
           </motion.div>
@@ -160,11 +183,17 @@ export default function OrderPage() {
             order.status === "approved" ? "text-green-400" :
             order.status === "delivered" ? "text-blue-400" : "text-red-400"
           }`}>
-            {order.status === "pending" ? "Pagamento aguardando aprovação" :
+            {order.status === "pending" ? "Aguardando pagamento" :
              order.status === "approved" ? "Pagamento aprovado" :
              order.status === "delivered" ? "Retirado" : "Cancelado"}
           </p>
           <p className="text-marrom text-xs mt-1">{order.customerName}</p>
+          {order.status === "pending" && (
+            <p className="text-[10px] text-marrom mt-2 flex items-center justify-center gap-1">
+              <RefreshCw className="w-3 h-3 animate-spin" />
+              Atualizando automaticamente...
+            </p>
+          )}
         </motion.div>
 
         <motion.div
@@ -206,7 +235,7 @@ export default function OrderPage() {
               Apresente este QR no dia da retirada
             </p>
             <a
-              href={`/api/ticket-image/${order.token}`}
+              href={`/api/ticket-image/${orderToken.current}`}
               download={`ficha-${order.id}.png`}
               className="btn-primary text-sm py-2 mt-3 inline-flex items-center justify-center gap-2 w-full"
             >
