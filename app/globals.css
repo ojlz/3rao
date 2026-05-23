@@ -1,0 +1,106 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: #1D150D;
+  color: #E8D5B7;
+  font-family: 'Inter', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+input, textarea, select {
+  background: #181818;
+  border: 1px solid #8B5E3C;
+  color: #E8D5B7;
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-size: 16px;
+  width: 100%;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+input:focus, textarea:focus, select:focus {
+  border-color: #6B1D2A;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+.gradient-bg {
+  background: linear-gradient(135deg, #1D150D 0%, #181818 100%);
+}
+
+.card {
+  background: #181818;
+  border: 1px solid #8B5E3C;
+  border-radius: 16px;
+  padding: 24px;
+}
+
+.btn-primary {
+  background: #6B1D2A;
+  color: white;
+  padding: 14px 24px;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 16px;
+  transition: all 0.2s;
+  width: 100%;
+}
+
+.btn-primary:hover {
+  background: #8B2640;
+  transform: translateY(-1px);
+}
+
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-secondary {
+  background: transparent;
+  color: #E8D5B7;
+  border: 1px solid #8B5E3C;
+  padding: 14px 24px;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 16px;
+  transition: all 0.2s;
+}
+
+.btn-secondary:hover {
+  background: #8B5E3C;
+  color: white;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+
+.loading-dot {
+  animation: pulse-dot 1.4s infinite;
+}
+
+.loading-dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.loading-dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
