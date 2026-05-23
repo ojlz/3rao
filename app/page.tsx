@@ -70,6 +70,92 @@ function PhoneInput({ value, onChange }: { value: string; onChange: (v: string) 
   )
 }
 
+function ProductCard({ product, index, cart, imageErrors, setImageErrors, addToCart, removeFromCart, formatPrice }: {
+  product: Product
+  index: number
+  cart: Map<string, { product: Product; quantity: number }>
+  imageErrors: Set<string>
+  setImageErrors: (fn: (prev: Set<string>) => Set<string>) => void
+  addToCart: (p: Product) => void
+  removeFromCart: (id: string) => void
+  formatPrice: (cents: number) => string
+}) {
+  return (
+    <motion.div
+      key={product.id}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.05 }}
+      layout
+      className="card overflow-hidden p-0"
+    >
+      <div className="flex">
+        {product.imageUrl && !imageErrors.has(product.id) ? (
+          <div className="w-28 h-28 shrink-0 bg-dark flex items-center justify-center overflow-hidden">
+            <img
+              src={product.imageUrl}
+              alt={product.name}
+              className="w-full h-full object-cover"
+              onError={() => setImageErrors((prev) => new Set(prev).add(product.id))}
+            />
+          </div>
+        ) : product.imageUrl ? (
+          <div className="w-28 h-28 shrink-0 bg-dark flex items-center justify-center">
+            <ImageOff className="w-5 h-5 text-marrom" />
+          </div>
+        ) : null}
+        <div className="flex-1 p-4">
+          <div className="flex justify-between items-start">
+            <div className="flex-1 min-w-0">
+              <h3 className="text-bege font-semibold text-base truncate">{product.name}</h3>
+              {product.description && (
+                <p className="text-marrom text-xs mt-0.5 line-clamp-2">{product.description}</p>
+              )}
+              <p className="text-white font-bold text-lg mt-2">{formatPrice(product.price)}</p>
+            </div>
+          </div>
+          <div className="flex items-center justify-between mt-3">
+            <motion.button
+              whileTap={{ scale: 0.9 }}
+              onClick={() => addToCart(product)}
+              className="w-10 h-10 bg-bordo rounded-xl flex items-center justify-center hover:bg-bordo/80 transition active:scale-95"
+            >
+              <Plus className="w-5 h-5 text-white" />
+            </motion.button>
+            <AnimatePresence>
+              {cart.has(product.id) && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.5 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="flex items-center gap-2"
+                >
+                  <motion.button
+                    whileTap={{ scale: 0.9 }}
+                    onClick={() => removeFromCart(product.id)}
+                    className="w-8 h-8 rounded-lg border border-marrom/50 flex items-center justify-center text-marrom"
+                  >
+                    <Minus className="w-3.5 h-3.5" />
+                  </motion.button>
+                  <span className="text-bege font-bold w-6 text-center tabular-nums">
+                    {cart.get(product.id)!.quantity}
+                  </span>
+                  <motion.button
+                    whileTap={{ scale: 0.9 }}
+                    onClick={() => addToCart(product)}
+                    className="w-8 h-8 rounded-lg bg-bordo/80 flex items-center justify-center text-white"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                  </motion.button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  )
+}
+
 export default function Home() {
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
@@ -81,7 +167,9 @@ export default function Home() {
   const [orderResult, setOrderResult] = useState<{ orderId: string; token: string; pixKey: string; pixAmount: string; pixName: string } | null>(null)
   const [error, setError] = useState("")
   const [copied, setCopied] = useState(false)
+  const [pixCopied, setPixCopied] = useState(false)
   const [imageErrors, setImageErrors] = useState<Set<string>>(new Set())
+  const [category, setCategory] = useState("")
 
   useEffect(() => {
     fetch("/api/products")
@@ -95,6 +183,17 @@ export default function Home() {
       })
       .catch(() => setLoading(false))
   }, [])
+
+  const categories = Array.from(new Set(products.map((p) => p.category || "geral"))).sort()
+  const filtered = category ? products.filter((p) => (p.category || "geral") === category) : products
+  const grouped = category ? null : Object.entries(
+    filtered.reduce<Record<string, Product[]>>((acc, p) => {
+      const cat = p.category || "geral"
+      if (!acc[cat]) acc[cat] = []
+      acc[cat].push(p)
+      return acc
+    }, {})
+  ).sort(([a], [b]) => categories.indexOf(a) - categories.indexOf(b))
 
   const totalItems = Array.from(cart.values()).reduce((acc, item) => acc + item.quantity, 0)
   const totalPrice = Array.from(cart.values()).reduce(
@@ -228,91 +327,69 @@ export default function Home() {
       <main className="max-w-lg mx-auto px-4 pt-6">
         {step === "products" && (
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-            <motion.h2
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="text-lg font-semibold text-bege mb-4"
-            >
-              Cardápio
-            </motion.h2>
-            <div className="grid gap-4">
-              {products.map((product, index) => (
-                <motion.div
-                  key={product.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.05 }}
-                  layout
-                  className="card overflow-hidden p-0"
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-bege">Cardápio</h2>
+            </div>
+
+            <div className="flex gap-2 mb-4 overflow-x-auto pb-1 scrollbar-none">
+              <button
+                onClick={() => setCategory("")}
+                className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                  !category ? "bg-bordo text-white" : "bg-marrom/20 text-marrom hover:text-bege"
+                }`}
+              >
+                Tudo
+              </button>
+              {categories.map((cat) => (
+                <button
+                  key={cat}
+                  onClick={() => setCategory(cat)}
+                  className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium capitalize transition-colors ${
+                    category === cat ? "bg-bordo text-white" : "bg-marrom/20 text-marrom hover:text-bege"
+                  }`}
                 >
-                  <div className="flex">
-                    {product.imageUrl && !imageErrors.has(product.id) ? (
-                      <div className="w-28 h-28 shrink-0 bg-dark flex items-center justify-center overflow-hidden">
-                        <img
-                          src={product.imageUrl}
-                          alt={product.name}
-                          className="w-full h-full object-cover"
-                          onError={() => setImageErrors((p) => new Set(p).add(product.id))}
-                        />
-                      </div>
-                    ) : product.imageUrl ? (
-                      <div className="w-28 h-28 shrink-0 bg-dark flex items-center justify-center">
-                        <ImageOff className="w-5 h-5 text-marrom" />
-                      </div>
-                    ) : null}
-                    <div className="flex-1 p-4">
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1 min-w-0">
-                          <h3 className="text-bege font-semibold text-base truncate">{product.name}</h3>
-                          {product.description && (
-                            <p className="text-marrom text-xs mt-0.5 line-clamp-2">{product.description}</p>
-                          )}
-                          <p className="text-white font-bold text-lg mt-2">{formatPrice(product.price)}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center justify-between mt-3">
-                        <motion.button
-                          whileTap={{ scale: 0.9 }}
-                          onClick={() => addToCart(product)}
-                          className="w-10 h-10 bg-bordo rounded-xl flex items-center justify-center hover:bg-bordo/80 transition active:scale-95"
-                        >
-                          <Plus className="w-5 h-5 text-white" />
-                        </motion.button>
-                        <AnimatePresence>
-                          {cart.has(product.id) && (
-                            <motion.div
-                              initial={{ opacity: 0, scale: 0.5 }}
-                              animate={{ opacity: 1, scale: 1 }}
-                              className="flex items-center gap-2"
-                            >
-                              <motion.button
-                                whileTap={{ scale: 0.9 }}
-                                onClick={() => removeFromCart(product.id)}
-                                className="w-8 h-8 rounded-lg border border-marrom/50 flex items-center justify-center text-marrom"
-                              >
-                                <Minus className="w-3.5 h-3.5" />
-                              </motion.button>
-                              <span className="text-bege font-bold w-6 text-center tabular-nums">
-                                {cart.get(product.id)!.quantity}
-                              </span>
-                              <motion.button
-                                whileTap={{ scale: 0.9 }}
-                                onClick={() => addToCart(product)}
-                                className="w-8 h-8 rounded-lg bg-bordo/80 flex items-center justify-center text-white"
-                              >
-                                <Plus className="w-3.5 h-3.5" />
-                              </motion.button>
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-                      </div>
-                    </div>
-                  </div>
-                </motion.div>
+                  {cat}
+                </button>
               ))}
-              {products.length === 0 && (
+            </div>
+
+            <div className="grid gap-4">
+              {category && filtered.map((product, index) => (
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  index={index}
+                  cart={cart}
+                  imageErrors={imageErrors}
+                  setImageErrors={setImageErrors}
+                  addToCart={addToCart}
+                  removeFromCart={removeFromCart}
+                  formatPrice={formatPrice}
+                />
+              ))}
+              {!category && grouped && grouped.map(([cat, prods]) => (
+                <div key={cat}>
+                  <h3 className="text-sm font-semibold text-marrom uppercase tracking-wide mb-3 capitalize">{cat}</h3>
+                  <div className="grid gap-3">
+                    {prods.map((product, index) => (
+                      <ProductCard
+                        key={product.id}
+                        product={product}
+                        index={index}
+                        cart={cart}
+                        imageErrors={imageErrors}
+                        setImageErrors={setImageErrors}
+                        addToCart={addToCart}
+                        removeFromCart={removeFromCart}
+                        formatPrice={formatPrice}
+                      />
+                    ))}
+                  </div>
+                </div>
+              ))}
+              {filtered.length === 0 && (
                 <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-marrom text-center py-12">
-                  Cardápio em breve...
+                  Nenhum produto nesta categoria
                 </motion.p>
               )}
             </div>
@@ -533,10 +610,25 @@ export default function Home() {
                 transition={{ delay: 0.3 }}
                 className="bg-dark rounded-xl p-4 mb-3 space-y-2"
               >
-                <div>
-                  <p className="text-[10px] text-marrom uppercase tracking-wide mb-0.5">Chave PIX</p>
-                  <p className="text-bege font-mono text-sm break-all select-all">{orderResult.pixKey}</p>
-                </div>
+                  <div>
+                    <p className="text-[10px] text-marrom uppercase tracking-wide mb-0.5">Chave PIX</p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-bege font-mono text-sm break-all select-all flex-1">{orderResult.pixKey}</p>
+                      <motion.button
+                        whileTap={{ scale: 0.9 }}
+                        onClick={async () => {
+                          try {
+                            await navigator.clipboard.writeText(orderResult.pixKey)
+                            setPixCopied(true)
+                            setTimeout(() => setPixCopied(false), 2000)
+                          } catch {}
+                        }}
+                        className="shrink-0 w-8 h-8 flex items-center justify-center rounded-lg border border-marrom/40 text-marrom hover:text-bege"
+                      >
+                        {pixCopied ? <Check className="w-3.5 h-3.5 text-green-400" /> : <Copy className="w-3.5 h-3.5" />}
+                      </motion.button>
+                    </div>
+                  </div>
                 <div>
                   <p className="text-[10px] text-marrom uppercase tracking-wide mb-0.5">Nome</p>
                   <p className="text-bege text-sm">{orderResult.pixName}</p>
