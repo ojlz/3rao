@@ -1,8 +1,9 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
-import { CheckCircle, Clock, Package, DollarSign, Trash2 } from "lucide-react"
+import { motion, AnimatePresence } from "framer-motion"
+import { CheckCircle, Clock, Package, DollarSign, Trash2, RotateCcw } from "lucide-react"
 import type { Order } from "@/types"
 
 function formatPrice(cents: number): string {
@@ -13,6 +14,7 @@ export default function AdminDashboard() {
   const [authenticated, setAuthenticated] = useState(false)
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
+  const [toast, setToast] = useState<{ orderId: string; name: string } | null>(null)
   const router = useRouter()
 
   useEffect(() => {
@@ -39,14 +41,35 @@ export default function AdminDashboard() {
     setLoading(false)
   }
 
-  async function approveOrder(orderId: string) {
+  async function approveOrder(orderId: string, customerName: string) {
     const res = await fetch("/api/orders/approve", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ orderId }),
     })
-    if (res.ok) fetchOrders()
+    if (res.ok) {
+      fetchOrders()
+      setToast({ orderId, name: customerName })
+    }
   }
+
+  async function undoApprove(orderId: string) {
+    const res = await fetch("/api/orders/undo", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ orderId }),
+    })
+    if (res.ok) {
+      setToast(null)
+      fetchOrders()
+    }
+  }
+
+  useEffect(() => {
+    if (!toast) return
+    const timer = setTimeout(() => setToast(null), 5000)
+    return () => clearTimeout(timer)
+  }, [toast])
 
   if (!authenticated) return null
 
@@ -119,7 +142,7 @@ export default function AdminDashboard() {
                   ))}
                 </div>
                 <button
-                  onClick={() => approveOrder(order.id)}
+                  onClick={() => approveOrder(order.id, order.customerName)}
                   className="btn-primary text-sm py-2"
                 >
                   Aprovar Pagamento
@@ -148,6 +171,31 @@ export default function AdminDashboard() {
           </button>
         </div>
       </main>
+
+      <AnimatePresence>
+        {toast && (
+          <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 50 }}
+            className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[90%] max-w-sm"
+          >
+            <div className="bg-green-900/90 backdrop-blur-sm border border-green-500/30 rounded-xl px-4 py-3 flex items-center gap-3 shadow-lg">
+              <CheckCircle className="w-5 h-5 text-green-400 shrink-0" />
+              <p className="text-sm text-green-100 flex-1">
+                Pedido de <span className="font-semibold">{toast.name}</span> aprovado
+              </p>
+              <button
+                onClick={() => undoApprove(toast.orderId)}
+                className="flex items-center gap-1 text-xs font-medium text-yellow-300 hover:text-yellow-200 bg-yellow-400/10 px-2.5 py-1.5 rounded-lg transition shrink-0"
+              >
+                <RotateCcw className="w-3 h-3" />
+                Desfazer
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

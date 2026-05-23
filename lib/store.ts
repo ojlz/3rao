@@ -116,6 +116,10 @@ export async function invalidateTicket(token: string): Promise<void> {
   }
 }
 
+export async function deleteTicket(token: string): Promise<void> {
+  await redis.del(`ticket:${token}`)
+}
+
 export async function getOrderByToken(token: string): Promise<Order | null> {
   const orders = await getAllOrders()
   return orders.find((o) => o.token === token) || null
@@ -141,4 +145,8 @@ export async function saveTicketImage(token: string, buffer: Buffer): Promise<vo
 export async function getTicketImage(token: string): Promise<Buffer | null> {
   const data = await redis.get<string>(`${TICKET_IMG_PREFIX}${token}`)
   return data ? Buffer.from(data, "base64") : null
+}
+
+export async function deleteTicketImage(token: string): Promise<void> {
+  await redis.del(`${TICKET_IMG_PREFIX}${token}`)
 }
