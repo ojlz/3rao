@@ -99,7 +99,7 @@ function ProductCard({ product, index, cart, imageErrors, setImageErrors, addToC
     >
       <div className="flex">
         {product.imageUrl && !imageErrors.has(product.id) ? (
-          <div className="w-28 h-28 shrink-0 bg-dark flex items-center justify-center overflow-hidden">
+          <div className="w-28 h-28 shrink-0 bg-dark flex items-center justify-center overflow-hidden rounded-xl">
             <img
               src={product.imageUrl}
               alt={product.name}
@@ -108,7 +108,7 @@ function ProductCard({ product, index, cart, imageErrors, setImageErrors, addToC
             />
           </div>
         ) : product.imageUrl ? (
-          <div className="w-28 h-28 shrink-0 bg-dark flex items-center justify-center">
+          <div className="w-28 h-28 shrink-0 bg-dark flex items-center justify-center rounded-xl">
             <ImageOff className="w-5 h-5 text-marrom" />
           </div>
         ) : null}
