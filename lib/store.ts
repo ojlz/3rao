@@ -121,6 +121,17 @@ export async function getOrderByToken(token: string): Promise<Order | null> {
   return orders.find((o) => o.token === token) || null
 }
 
+const CATEGORIES_ORDER_KEY = "categories_order"
+
+export async function getCategoryOrder(): Promise<string[]> {
+  const data = await redis.get<string>(CATEGORIES_ORDER_KEY)
+  return data ? parseValue<string[]>(data) : []
+}
+
+export async function saveCategoryOrder(order: string[]): Promise<void> {
+  await redis.set(CATEGORIES_ORDER_KEY, JSON.stringify(order))
+}
+
 const TICKET_IMG_PREFIX = "ticket_img:"
 
 export async function saveTicketImage(token: string, buffer: Buffer): Promise<void> {

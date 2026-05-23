@@ -115,24 +115,31 @@ function ProductCard({ product, index, cart, imageErrors, setImageErrors, addToC
             </div>
           </div>
           <div className="flex items-center justify-between mt-3">
-            <motion.button
-              whileTap={{ scale: 0.9 }}
-              onClick={() => addToCart(product)}
-              className="w-10 h-10 bg-bordo rounded-xl flex items-center justify-center hover:bg-bordo/80 transition active:scale-95"
-            >
-              <Plus className="w-5 h-5 text-white" />
-            </motion.button>
-            <AnimatePresence>
-              {cart.has(product.id) && (
-                <motion.div
+            <AnimatePresence mode="wait">
+              {!cart.has(product.id) ? (
+                <motion.button
+                  key="add"
+                  whileTap={{ scale: 0.9 }}
+                  onClick={() => addToCart(product)}
                   initial={{ opacity: 0, scale: 0.5 }}
                   animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.5 }}
+                  className="w-10 h-10 bg-bordo rounded-xl flex items-center justify-center hover:bg-bordo/80 transition active:scale-95"
+                >
+                  <Plus className="w-5 h-5 text-white" />
+                </motion.button>
+              ) : (
+                <motion.div
+                  key="qty"
+                  initial={{ opacity: 0, scale: 0.5 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.5 }}
                   className="flex items-center gap-2"
                 >
                   <motion.button
                     whileTap={{ scale: 0.9 }}
                     onClick={() => removeFromCart(product.id)}
-                    className="w-8 h-8 rounded-lg border border-marrom/50 flex items-center justify-center text-marrom"
+                    className="w-8 h-8 rounded-lg bg-bordo flex items-center justify-center text-white"
                   >
                     <Minus className="w-3.5 h-3.5" />
                   </motion.button>
@@ -142,7 +149,7 @@ function ProductCard({ product, index, cart, imageErrors, setImageErrors, addToC
                   <motion.button
                     whileTap={{ scale: 0.9 }}
                     onClick={() => addToCart(product)}
-                    className="w-8 h-8 rounded-lg bg-bordo/80 flex items-center justify-center text-white"
+                    className="w-8 h-8 rounded-lg bg-green-600 flex items-center justify-center text-white"
                   >
                     <Plus className="w-3.5 h-3.5" />
                   </motion.button>
@@ -184,7 +191,19 @@ export default function Home() {
       .catch(() => setLoading(false))
   }, [])
 
-  const categories = Array.from(new Set(products.map((p) => p.category || "geral"))).sort()
+  const [categoryOrder, setCategoryOrder] = useState<string[]>([])
+
+  useEffect(() => {
+    fetch("/api/categories")
+      .then((r) => r.json())
+      .then((data) => setCategoryOrder(data.order || []))
+      .catch(() => {})
+  }, [])
+
+  const categoriesRaw = Array.from(new Set(products.map((p) => p.category || "geral")))
+  const orderedPart = categoryOrder.filter((c) => categoriesRaw.includes(c))
+  const missingPart = categoriesRaw.filter((c) => !categoryOrder.includes(c))
+  const categories = [...orderedPart, ...missingPart]
   const filtered = category ? products.filter((p) => (p.category || "geral") === category) : products
   const grouped = category ? null : Object.entries(
     filtered.reduce<Record<string, Product[]>>((acc, p) => {
@@ -446,7 +465,7 @@ export default function Home() {
                         <motion.button
                           whileTap={{ scale: 0.9 }}
                           onClick={() => removeFromCart(item.product.id)}
-                          className="w-8 h-8 rounded-lg border border-marrom/40 flex items-center justify-center text-marrom hover:text-bege transition"
+                          className="w-8 h-8 rounded-lg bg-bordo flex items-center justify-center text-white"
                         >
                           <Minus className="w-3.5 h-3.5" />
                         </motion.button>
@@ -454,7 +473,7 @@ export default function Home() {
                         <motion.button
                           whileTap={{ scale: 0.9 }}
                           onClick={() => addToCart(item.product)}
-                          className="w-8 h-8 rounded-lg bg-bordo/80 flex items-center justify-center text-white"
+                          className="w-8 h-8 rounded-lg bg-green-600 flex items-center justify-center text-white"
                         >
                           <Plus className="w-3.5 h-3.5" />
                         </motion.button>

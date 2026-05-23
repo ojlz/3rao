@@ -2,12 +2,13 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { Plus, Trash2, Pencil, ChevronUp, ChevronDown } from "lucide-react"
+import { Plus, Trash2, Pencil, ChevronUp, ChevronDown, Layout } from "lucide-react"
 import type { Product } from "@/types"
 
 export default function AdminProducts() {
   const [authenticated, setAuthenticated] = useState(false)
   const [products, setProducts] = useState<Product[]>([])
+  const [categoryOrder, setCategoryOrder] = useState<string[]>([])
   const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [form, setForm] = useState({ name: "", description: "", price: "", category: "", imageUrl: "", complements: "" })
@@ -21,6 +22,7 @@ export default function AdminProducts() {
         else setAuthenticated(true)
       })
     fetchProducts()
+    fetchCategoryOrder()
   }, [router])
 
   function openNewForm() {
@@ -46,6 +48,12 @@ export default function AdminProducts() {
     const res = await fetch("/api/products")
     const data = await res.json()
     setProducts(data.products)
+  }
+
+  async function fetchCategoryOrder() {
+    const res = await fetch("/api/categories")
+    const data = await res.json()
+    setCategoryOrder(data.order || [])
   }
 
   async function saveProduct() {
@@ -76,6 +84,7 @@ export default function AdminProducts() {
       setEditingId(null)
       setForm({ name: "", description: "", price: "", category: "", imageUrl: "", complements: "" })
       fetchProducts()
+      fetchCategoryOrder()
     }
   }
 
@@ -99,6 +108,26 @@ export default function AdminProducts() {
     })
     if (res.ok) fetchProducts()
   }
+
+  async function moveCategory(index: number, direction: -1 | 1) {
+    const target = index + direction
+    if (target < 0 || target >= categoryOrder.length) return
+
+    const newOrder = [...categoryOrder]
+    ;[newOrder[index], newOrder[target]] = [newOrder[target], newOrder[index]]
+
+    const res = await fetch("/api/categories", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ order: newOrder }),
+    })
+    if (res.ok) setCategoryOrder(newOrder)
+  }
+
+  const usedCategories = Array.from(new Set(products.map((p) => p.category || "geral")))
+  const orderedCategories = categoryOrder.filter((c) => usedCategories.includes(c))
+  const missingCategories = usedCategories.filter((c) => !categoryOrder.includes(c))
+  const allOrdered = [...orderedCategories, ...missingCategories]
 
   if (!authenticated) return null
 
@@ -136,6 +165,40 @@ export default function AdminProducts() {
             </div>
           </div>
         )}
+
+        {allOrdered.length > 1 && (
+          <div className="card mb-6">
+            <div className="flex items-center gap-2 mb-3">
+              <Layout className="w-4 h-4 text-marrom" />
+              <h3 className="text-sm font-semibold text-bege">Ordem das Categorias</h3>
+            </div>
+            <div className="space-y-2">
+              {allOrdered.map((cat, index) => (
+                <div key={cat} className="flex items-center gap-3 bg-dark rounded-lg px-3 py-2">
+                  <div className="flex flex-col items-center gap-0.5">
+                    <button
+                      onClick={() => moveCategory(index, -1)}
+                      disabled={index === 0}
+                      className="w-5 h-5 flex items-center justify-center text-marrom hover:text-bege disabled:opacity-20 disabled:cursor-not-allowed"
+                    >
+                      <ChevronUp className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => moveCategory(index, 1)}
+                      disabled={index === allOrdered.length - 1}
+                      className="w-5 h-5 flex items-center justify-center text-marrom hover:text-bege disabled:opacity-20 disabled:cursor-not-allowed"
+                    >
+                      <ChevronDown className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                  <span className="text-sm text-bege font-medium capitalize">{cat}</span>
+                  <span className="text-[10px] text-marrom ml-auto">{products.filter((p) => (p.category || "geral") === cat).length} itens</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="grid gap-4">
           {products.map((product, index) => (
             <div key={product.id} className="card flex items-center gap-4">
