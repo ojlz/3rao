@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { CheckCircle, Clock, Package } from "lucide-react"
+import { CheckCircle, Clock, Package, Trash2 } from "lucide-react"
 import type { Order } from "@/types"
 
 function formatPrice(cents: number): string {
@@ -122,6 +122,25 @@ export default function AdminDashboard() {
             ))}
           </div>
         )}
+
+        <div className="mt-12 pt-6 border-t border-marrom/20">
+          <button
+            onClick={async () => {
+              if (!confirm("Tem certeza? Isso vai apagar TODOS os pedidos e fichas. Os produtos não serão afetados.")) return
+              if (!confirm("Essa ação não pode ser desfeita. Continuar?")) return
+              const res = await fetch("/api/admin/reset", { method: "POST" })
+              if (res.ok) {
+                fetchOrders()
+              } else {
+                alert("Erro ao resetar")
+              }
+            }}
+            className="flex items-center gap-2 text-xs text-red-400/60 hover:text-red-400 transition-colors mx-auto"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+            Resetar pedidos e fichas
+          </button>
+        </div>
       </main>
     </div>
   )
