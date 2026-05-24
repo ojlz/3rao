@@ -44,6 +44,7 @@ export async function reorderProducts(ids: string[]): Promise<void> {
 export async function createOrder(
   customerName: string,
   customerPhone: string,
+  customerEmail: string,
   items: OrderItem[],
   totalPrice: number
 ): Promise<Order> {
@@ -56,6 +57,7 @@ export async function createOrder(
     token,
     customerName,
     customerPhone,
+    customerEmail,
     items,
     totalPrice,
     status: "pending",

@@ -36,6 +36,42 @@ function LoadingScreen() {
   )
 }
 
+function EmailInput({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const isValid = value.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)
+
+  return (
+    <div>
+      <label className="text-sm text-marrom block mb-1">
+        <span className="inline mr-1">@</span>
+        E-mail
+      </label>
+      <div className="relative">
+        <input
+          type="email"
+          inputMode="email"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder="seu@email.com"
+          className={isValid && value.length > 0 ? "border-green-500/50" : ""}
+        />
+        {isValid && (
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            className="absolute right-3 top-1/2 -translate-y-1/2"
+          >
+            <Check className="w-4 h-4 text-green-400" />
+          </motion.div>
+        )}
+      </div>
+      <p className="text-[11px] text-marrom mt-1">Coloque o email para receber sua ficha</p>
+      {value.length > 0 && !isValid && (
+        <p className="text-xs text-red-400 mt-1">Digite um e-mail válido</p>
+      )}
+    </div>
+  )
+}
+
 function PhoneInput({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   const display = value.replace(/(\d{2})(\d{5})(\d{4})/, "($1) $2-$3")
 
@@ -178,6 +214,7 @@ export default function Home() {
   const [step, setStep] = useState<"products" | "cart" | "checkout" | "success">("products")
   const [customerName, setCustomerName] = useState("")
   const [customerPhone, setCustomerPhone] = useState("")
+  const [customerEmail, setCustomerEmail] = useState("")
   const [submitting, setSubmitting] = useState(false)
   const [orderResult, setOrderResult] = useState<{ orderId: string; token: string; pixKey: string; pixAmount: string; pixName: string } | null>(null)
   const [error, setError] = useState("")
@@ -265,6 +302,10 @@ export default function Home() {
       setError("Telefone inválido (DDD + 9 dígitos)")
       return
     }
+    if (!customerEmail.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
+      setError("Digite um e-mail válido")
+      return
+    }
     if (cart.size === 0) {
       setError("Carrinho vazio")
       return
@@ -286,6 +327,7 @@ export default function Home() {
         body: JSON.stringify({
           customerName: customerName.trim(),
           customerPhone: customerPhone,
+          customerEmail: customerEmail.trim(),
           items,
           totalPrice,
         }),
@@ -547,9 +589,16 @@ export default function Home() {
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.15 }}
+                transition={{ delay: 0.1 }}
               >
                 <PhoneInput value={customerPhone} onChange={setCustomerPhone} />
+              </motion.div>
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.15 }}
+              >
+                <EmailInput value={customerEmail} onChange={setCustomerEmail} />
               </motion.div>
               <motion.div
                 initial={{ opacity: 0, y: 10 }}

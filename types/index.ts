@@ -30,6 +30,7 @@ export interface Order {
   token: string
   customerName: string
   customerPhone: string
+  customerEmail: string
   items: OrderItem[]
   totalPrice: number
   status: "pending" | "approved" | "delivered" | "cancelled"
