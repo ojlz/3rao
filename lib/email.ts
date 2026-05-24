@@ -40,6 +40,8 @@ async function sendEmail(to: string[], subject: string, html: string, attachment
     if (!res.ok) {
       const text = await res.text()
       console.error("Resend error:", res.status, text)
+    } else {
+      console.log("Email sent successfully to:", to, "subject:", subject)
     }
   } catch (error) {
     console.error("Send email error:", error)

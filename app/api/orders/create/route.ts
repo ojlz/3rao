@@ -70,27 +70,27 @@ export async function POST(request: Request) {
     const trackingUrl = `${baseUrl}/pedido/${order.id}?token=${order.token}`
     const adminUrl = `${baseUrl}/admin/dashboard`
 
-    sendOrderConfirmation(
-      order.customerEmail,
-      order.id,
-      order.customerName,
-      order.totalPrice,
-      process.env.PIX_KEY || "espetodoterceirao@pix.com",
-      (order.totalPrice / 100).toFixed(2),
-      order.token,
-      trackingUrl
-    )
-
-    notifyAdminNewOrder(
-      order.customerName,
-      order.customerPhone,
-      order.customerEmail,
-      order.id,
-      order.totalPrice,
-      adminUrl
-    )
-
-    notifyAdminsNewOrder(order.id, order.customerName, order.totalPrice)
+    await Promise.allSettled([
+      sendOrderConfirmation(
+        order.customerEmail,
+        order.id,
+        order.customerName,
+        order.totalPrice,
+        process.env.PIX_KEY || "espetodoterceirao@pix.com",
+        (order.totalPrice / 100).toFixed(2),
+        order.token,
+        trackingUrl
+      ),
+      notifyAdminNewOrder(
+        order.customerName,
+        order.customerPhone,
+        order.customerEmail,
+        order.id,
+        order.totalPrice,
+        adminUrl
+      ),
+      notifyAdminsNewOrder(order.id, order.customerName, order.totalPrice),
+    ])
 
     return NextResponse.json({
       orderId: order.id,

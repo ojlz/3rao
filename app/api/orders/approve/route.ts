@@ -51,7 +51,7 @@ export async function POST(request: Request) {
     const ticketImageBuffer = await getTicketImage(order.token)
     const ticketImageBase64 = ticketImageBuffer?.toString("base64") || ""
 
-    sendOrderApproved(
+    await sendOrderApproved(
       order.customerEmail,
       order.id,
       order.customerName,
