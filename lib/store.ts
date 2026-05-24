@@ -157,4 +157,17 @@ export async function deleteTicketImage(token: string): Promise<void> {
   await redis.del(`${TICKET_IMG_PREFIX}${token}`)
 }
 
+const ADMIN_EMAILS_KEY = "admin_emails"
 
+export async function getAdminEmails(): Promise<string[]> {
+  const data = await redis.smembers(ADMIN_EMAILS_KEY)
+  return data || []
+}
+
+export async function addAdminEmail(email: string): Promise<void> {
+  await redis.sadd(ADMIN_EMAILS_KEY, email)
+}
+
+export async function removeAdminEmail(email: string): Promise<void> {
+  await redis.srem(ADMIN_EMAILS_KEY, email)
+}

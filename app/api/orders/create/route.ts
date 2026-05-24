@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { createOrder, getProduct } from "@/lib/store"
+import { sendOrderConfirmation, notifyAdminNewOrder } from "@/lib/email"
 import { notifyAdminsNewOrder } from "@/lib/push"
 import type { OrderItem } from "@/types"
 
@@ -62,7 +63,31 @@ export async function POST(request: Request) {
       totalPrice
     )
 
-    notifyAdminsNewOrder(order.id, order.customerName, order.totalPrice)
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || `${request.headers.get("origin") || "http://localhost:3000"}`
+    const trackingUrl = `${baseUrl}/pedido/${order.id}?token=${order.token}`
+    const adminUrl = `${baseUrl}/admin/dashboard`
+
+    await Promise.allSettled([
+      customerEmail ? sendOrderConfirmation(
+        order.customerEmail,
+        order.id,
+        order.customerName,
+        order.totalPrice,
+        process.env.PIX_KEY || "espetodoterceirao@pix.com",
+        (order.totalPrice / 100).toFixed(2),
+        order.token,
+        trackingUrl
+      ) : Promise.resolve(),
+      notifyAdminNewOrder(
+        order.customerName,
+        order.customerPhone,
+        order.customerEmail,
+        order.id,
+        order.totalPrice,
+        adminUrl
+      ),
+      notifyAdminsNewOrder(order.id, order.customerName, order.totalPrice),
+    ])
 
     return NextResponse.json({
       orderId: order.id,
