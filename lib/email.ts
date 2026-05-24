@@ -1,4 +1,5 @@
 import nodemailer from "nodemailer"
+import { getAdminEmails } from "./store"
 
 const transporter = nodemailer.createTransport({
   service: "gmail",
@@ -136,13 +137,13 @@ export async function notifyAdminNewOrder(
   totalPrice: number,
   adminUrl: string
 ) {
-  const adminEmail = process.env.ADMIN_EMAIL
-  if (!adminEmail) return
+  const adminEmails = await getAdminEmails()
+  if (!adminEmails || adminEmails.length === 0) return
 
   try {
     await transporter.sendMail({
       from: `"${fromName}" <${fromEmail}>`,
-      to: adminEmail,
+      to: adminEmails.join(","),
       subject: `🆕 Pedido pendente #${orderId} - Espetão do Terceirão`,
       html: `
         <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:24px;background:#1D150D;color:#E8D5B7;border-radius:12px">
