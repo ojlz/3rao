@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server"
-import { getOrder, updateOrder, saveTicket, saveTicketImage, getTicketImage } from "@/lib/store"
+import { getOrder, updateOrder, saveTicket, saveTicketImage } from "@/lib/store"
 import { generateTicket } from "@/services/ticketGenerator"
 import { sendOrderApproved } from "@/lib/email"
 import { checkAuth } from "@/lib/auth"
+import QRCode from "qrcode"
 
 const EVENT_DATE = process.env.EVENT_DATE || "3 de junho"
 
@@ -47,8 +48,12 @@ export async function POST(request: Request) {
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || `${request.headers.get("origin") || "http://localhost:3000"}`
     const trackingUrl = `${baseUrl}/pedido/${order.id}?token=${order.token}`
 
-    const ticketImageBuffer = await getTicketImage(order.token)
-    const ticketImageBase64 = ticketImageBuffer?.toString("base64") || ""
+    const qrBuffer = await QRCode.toBuffer(order.token, {
+      width: 300,
+      margin: 2,
+      color: { dark: "#1D150D", light: "#FFFFFF" },
+    })
+    const qrBase64 = qrBuffer.toString("base64")
 
     if (order.customerEmail) {
       sendOrderApproved(
@@ -56,7 +61,7 @@ export async function POST(request: Request) {
         order.id,
         order.customerName,
         order.token,
-        ticketImageBase64,
+        qrBase64,
         trackingUrl
       )
     }

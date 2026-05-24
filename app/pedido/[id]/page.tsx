@@ -73,7 +73,7 @@ export default function OrderPage() {
       { text: "", size: 12 },
       { text: `Total: ${formatCurrency(order.totalPrice)}`, size: 20, weight: "bold" as const },
       { text: "", size: 8 },
-      { text: `Token: ${order.token}`, size: 14 },
+      { text: `Token: ${orderToken.current}`, size: 14 },
       { text: `Retirada: 3 de junho`, size: 14 },
       { text: "", size: 16 },
       { text: "RETIRADA SOMENTE DOS ITENS MOSTRADOS NO SISTEMA", size: 14, weight: "bold" as const },
@@ -81,9 +81,8 @@ export default function OrderPage() {
     const textHeight = textLines.reduce((acc, l) => acc + (l.text ? lineHeight : 16), 0)
     const height = padding * 2 + textHeight + qrSize + 40
 
-    canvas.width = width * 2
-    canvas.height = height * 2
-    ctx.scale(2, 2)
+    canvas.width = width
+    canvas.height = height
 
     ctx.fillStyle = "#1D150D"
     roundRect(ctx, 0, 0, width, height, 20)
@@ -94,17 +93,16 @@ export default function OrderPage() {
     roundRect(ctx, 4, 4, width - 8, height - 8, 18)
     ctx.stroke()
 
-    let y = padding
+    let y = padding + 28
+    ctx.fillStyle = "#E8D5B7"
+    ctx.textAlign = "center"
+    ctx.textBaseline = "middle"
     for (const l of textLines) {
       if (!l.text) { y += 16; continue }
+      ctx.font = `${l.weight === "bold" ? "bold " : ""}${l.size}px Outfit, sans-serif`
+      ctx.fillText(l.text, width / 2, y)
       y += lineHeight
-      ctx.fillStyle = "#E8D5B7"
-      ctx.font = `${l.weight === "bold" ? "bold " : ""}${l.size * 2}px Outfit, sans-serif`
-      ctx.textAlign = "center"
-      ctx.textBaseline = "middle"
-      ctx.fillText(l.text, width / 2, y - lineHeight / 2)
     }
-    y += 12
 
     const qrImg = new Image()
     qrImg.src = qrDataUrl

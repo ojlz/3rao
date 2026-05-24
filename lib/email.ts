@@ -96,7 +96,7 @@ export async function sendOrderApproved(
   _orderId: string,
   customerName: string,
   token: string,
-  ticketImageBase64: string,
+  qrBase64: string,
   trackingUrl: string
 ) {
   await send(to, `Pedido #${_orderId} aprovado! - Espetao do Terceirao`, `
@@ -109,10 +109,10 @@ export async function sendOrderApproved(
         <p style="margin:0;font-family:monospace;color:#E8D5B7;font-size:14px">${token}</p>
       </div>
     </div>
-    <p style="color:#A68B6B;font-size:14px;margin-bottom:12px">Sua ficha para retirada:</p>
-    ${ticketImageBase64 ? `<img src="data:image/png;base64,${ticketImageBase64}" alt="Ficha" style="display:block;max-width:100%;border-radius:12px;margin:0 auto" />` : ""}
+    <p style="color:#A68B6B;font-size:14px;margin-bottom:12px">Apresente este QR no dia da retirada:</p>
+    ${qrBase64 ? `<img src="data:image/png;base64,${qrBase64}" alt="QR da ficha" style="display:block;max-width:200px;border-radius:8px;margin:0 auto 12px" />` : ""}
     <a href="${trackingUrl}" style="display:block;background:#8B3A3A;color:#ffffff;text-decoration:none;text-align:center;padding:12px;border-radius:8px;font-weight:bold;font-size:14px;margin:8px 0">Baixar Ficha</a>
-  `, ticketImageBase64 || undefined)
+  `)
 }
 
 export async function notifyAdminNewOrder(
