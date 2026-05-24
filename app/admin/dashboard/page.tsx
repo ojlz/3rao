@@ -147,6 +147,24 @@ export default function AdminDashboard() {
 
       <main className="max-w-4xl mx-auto px-4 py-6">
 
+        <AnimatePresence>
+          {!loading && pending.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="bg-yellow-400/10 border border-yellow-400/30 rounded-xl px-4 py-3 mb-6 flex items-center justify-between"
+            >
+              <p className="text-sm text-yellow-300 font-semibold">
+                ⏳ {pending.length} pedido{pending.length > 1 ? "s" : ""} pendente{pending.length > 1 ? "s" : ""}
+              </p>
+              <a href="/admin/orders" className="text-xs text-bege hover:text-white underline">
+                Ver todos
+              </a>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
           <div className="card text-center py-4">
             <Clock className="w-5 h-5 text-yellow-400 mx-auto mb-1" />

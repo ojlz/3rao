@@ -49,7 +49,7 @@ export async function generateTicket(order: Order, eventDate: string): Promise<B
       const weight = l.weight || "normal"
       const fontSize = l.size
       return l.text
-        ? `<text x="${width / 2}" y="${y}" font-family="monospace" font-size="${fontSize}" font-weight="${weight}" fill="${color}" text-anchor="middle">${escapeXml(l.text)}</text>`
+        ? `<text x="${width / 2}" y="${y}" font-family="sans-serif" font-size="${fontSize}" font-weight="${weight}" fill="${color}" text-anchor="middle">${escapeXml(l.text)}</text>`
         : ""
     })
     .join("")

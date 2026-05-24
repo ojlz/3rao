@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { createOrder, getProduct } from "@/lib/store"
-import { sendOrderConfirmation } from "@/lib/email"
+import { sendOrderConfirmation, notifyAdminNewOrder } from "@/lib/email"
 import { notifyAdminsNewOrder } from "@/lib/push"
 import type { OrderItem } from "@/types"
 
@@ -77,7 +77,17 @@ export async function POST(request: Request) {
       order.totalPrice,
       process.env.PIX_KEY || "espetodoterceirao@pix.com",
       (order.totalPrice / 100).toFixed(2),
+      order.token,
       trackingUrl
+    )
+
+    notifyAdminNewOrder(
+      order.customerName,
+      order.customerPhone,
+      order.customerEmail,
+      order.id,
+      order.totalPrice,
+      adminUrl
     )
 
     notifyAdminsNewOrder(order.id, order.customerName, order.totalPrice)

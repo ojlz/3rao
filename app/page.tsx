@@ -211,7 +211,7 @@ export default function Home() {
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
   const [cart, setCart] = useState<Map<string, { product: Product; quantity: number }>>(new Map())
-  const [step, setStep] = useState<"products" | "cart" | "checkout" | "success">("products")
+  const [step, setStep] = useState<"products" | "cart" | "checkout" | "success" | "cancelled">("products")
   const [customerName, setCustomerName] = useState("")
   const [customerPhone, setCustomerPhone] = useState("")
   const [customerEmail, setCustomerEmail] = useState("")
@@ -220,6 +220,8 @@ export default function Home() {
   const [error, setError] = useState("")
   const [copied, setCopied] = useState(false)
   const [pixCopied, setPixCopied] = useState(false)
+  const [cancelling, setCancelling] = useState(false)
+  const [cancelled, setCancelled] = useState(false)
   const [imageErrors, setImageErrors] = useState<Set<string>>(new Set())
   const [category, setCategory] = useState("")
 
@@ -290,6 +292,32 @@ export default function Home() {
       }
       return next
     })
+  }
+
+  async function handleCancelOrder() {
+    if (!orderResult) return
+    if (!confirm("Tem certeza que deseja cancelar este pedido?")) return
+    setCancelling(true)
+    try {
+      const res = await fetch("/api/orders/cancel", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          orderId: orderResult.orderId,
+          token: orderResult.token,
+        }),
+      })
+      if (res.ok) {
+        setCancelled(true)
+        setStep("products")
+      } else {
+        const data = await res.json()
+        alert(data.error || "Erro ao cancelar")
+      }
+    } catch {
+      alert("Erro ao cancelar. Tente novamente.")
+    }
+    setCancelling(false)
   }
 
   async function handleSubmit() {
@@ -656,7 +684,7 @@ export default function Home() {
           </motion.div>
         )}
 
-        {step === "success" && orderResult && (
+        {step === "success" && orderResult ? (
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -758,9 +786,33 @@ export default function Home() {
                   <Copy className="w-3.5 h-3.5" />
                 </motion.button>
               </div>
+              <div className="mt-6 pt-4 border-t border-marrom/20">
+                <button
+                  onClick={handleCancelOrder}
+                  disabled={cancelling}
+                  className="w-full text-center text-xs text-red-400/60 hover:text-red-400 transition-colors py-2"
+                >
+                  {cancelling ? "Cancelando..." : "Cancelar pedido"}
+                </button>
+              </div>
             </div>
           </motion.div>
-        )}
+        ) : step === "cancelled" ? (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="text-center py-12"
+          >
+            <div className="w-16 h-16 bg-red-400/20 rounded-full flex items-center justify-center mx-auto mb-4">
+              <span className="text-2xl text-red-400">✕</span>
+            </div>
+            <h2 className="text-xl font-bold text-bege">Pedido cancelado</h2>
+            <p className="text-marrom text-sm mt-2">Se você pagou o PIX, entre em contato para reembolso.</p>
+            <button onClick={() => setStep("products")} className="btn-primary mt-6">
+              Novo Pedido
+            </button>
+          </motion.div>
+        ) : null}
       </main>
     </div>
   )
