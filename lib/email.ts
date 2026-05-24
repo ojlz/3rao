@@ -93,20 +93,20 @@ export async function sendOrderConfirmation(
 
 export async function sendOrderApproved(
   to: string,
-  orderId: string,
+  _orderId: string,
   customerName: string,
-  _token: string,
+  token: string,
   ticketImageBase64: string,
   trackingUrl: string
 ) {
-  await send(to, `Pedido #${orderId} aprovado! - Espetao do Terceirao`, `
+  await send(to, `Pedido #${_orderId} aprovado! - Espetao do Terceirao`, `
     <h2 style="color:#4ade80;margin:0 0 8px">Pagamento aprovado!</h2>
     <p style="color:#A68B6B;margin:0 0 16px">Ola, <strong style="color:#E8D5B7">${customerName}</strong>!</p>
     <div style="background:#2A1F14;border-radius:8px;padding:16px;margin-bottom:16px">
-      ${pedidoHtml(orderId)}
+      ${pedidoHtml(_orderId)}
       <div style="border-top:1px solid #2A1F14;margin:12px 0;padding-top:12px">
         <p style="margin:0 0 4px;font-size:12px;color:#A68B6B;text-transform:uppercase">Token da ficha</p>
-        <p style="margin:0;font-family:monospace;color:#E8D5B7;font-size:14px">${orderId}</p>
+        <p style="margin:0;font-family:monospace;color:#E8D5B7;font-size:14px">${token}</p>
       </div>
     </div>
     <p style="color:#A68B6B;font-size:14px;margin-bottom:12px">Sua ficha para retirada:</p>

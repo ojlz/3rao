@@ -235,6 +235,10 @@ export default function OrderPage() {
             <p className="text-[10px] text-marrom mt-2 uppercase tracking-wide">
               Apresente este QR no dia da retirada
             </p>
+            <div className="mt-3 p-2 bg-dark rounded-lg">
+              <p className="text-[9px] text-marrom uppercase tracking-wide mb-0.5">Token</p>
+              <p className="text-bege font-mono text-xs break-all select-all">{orderToken.current}</p>
+            </div>
             <a
               href={`/api/ticket-image/${orderToken.current}`}
               download={`ficha-${order.id}.png`}
