@@ -21,7 +21,7 @@ ${content}
 </div></body></html>`
 }
 
-async function send(to: string, subject: string, html: string, attachmentBase64?: string) {
+async function send(to: string, subject: string, html: string, inlineImages?: { cid: string; content: string; contentType: string }[]) {
   const key = process.env.BREVO_API_KEY
   if (!key) {
     console.error("BREVO_API_KEY nao configurada")
@@ -39,8 +39,13 @@ async function send(to: string, subject: string, html: string, attachmentBase64?
     htmlContent: wrapHtml(html),
   }
 
-  if (attachmentBase64) {
-    body.attachment = [{ content: attachmentBase64, name: "ficha.png" }]
+  if (inlineImages && inlineImages.length > 0) {
+    body.attachment = inlineImages.map((img) => ({
+      content: img.content,
+      name: `${img.cid}.png`,
+      contentType: img.contentType,
+      cid: img.cid,
+    }))
   }
 
   try {
@@ -110,9 +115,9 @@ export async function sendOrderApproved(
       </div>
     </div>
     <p style="color:#A68B6B;font-size:14px;margin-bottom:12px">Apresente este QR no dia da retirada:</p>
-    ${qrBase64 ? `<img src="data:image/png;base64,${qrBase64}" alt="QR da ficha" style="display:block;max-width:200px;border-radius:8px;margin:0 auto 12px" />` : ""}
+    ${qrBase64 ? `<img src="cid:qrcode" alt="QR da ficha" style="display:block;max-width:200px;border-radius:8px;margin:0 auto 12px" />` : ""}
     <a href="${trackingUrl}" style="display:block;background:#8B3A3A;color:#ffffff;text-decoration:none;text-align:center;padding:12px;border-radius:8px;font-weight:bold;font-size:14px;margin:8px 0">Baixar Ficha</a>
-  `)
+  `, qrBase64 ? [{ cid: "qrcode", content: qrBase64, contentType: "image/png" }] : undefined)
 }
 
 export async function notifyAdminNewOrder(
