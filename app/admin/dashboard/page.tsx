@@ -58,22 +58,10 @@ export default function AdminDashboard() {
   useEffect(() => {
     if (!authenticated) return
 
-    const es = new EventSource("/api/admin/orders/stream")
+    fetchOrders()
 
-    es.onmessage = (event) => {
-      try {
-        setOrders(JSON.parse(event.data))
-      } catch {
-        // ignore parse errors
-      }
-      setLoading(false)
-    }
-
-    es.onerror = () => {
-      // EventSource auto-reconnects
-    }
-
-    return () => es.close()
+    const interval = setInterval(fetchOrders, 5000)
+    return () => clearInterval(interval)
   }, [authenticated])
 
   async function subscribePush() {
