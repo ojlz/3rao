@@ -2,16 +2,29 @@ import sharp from "sharp"
 import QRCode from "qrcode"
 import type { Order, OrderItem } from "@/types"
 
+let fontBase64: string | null = null
+
+async function getFont(): Promise<string> {
+  if (fontBase64) return fontBase64
+  const res = await fetch("https://fonts.gstatic.com/s/outfit/v11/QGYvz_MVcBeNP4NJtEtqUYLknw.woff2")
+  const buf = Buffer.from(await res.arrayBuffer())
+  fontBase64 = buf.toString("base64")
+  return fontBase64
+}
+
 function formatCurrency(value: number): string {
   return `R$ ${(value / 100).toFixed(2).replace(".", ",")}`
 }
 
 export async function generateTicket(order: Order, eventDate: string): Promise<Buffer> {
-  const qrBuffer = await QRCode.toBuffer(order.token, {
-    width: 300,
-    margin: 2,
-    color: { dark: "#1D150D", light: "#FFFFFF" },
-  })
+  const [qrBuffer, fontData] = await Promise.all([
+    QRCode.toBuffer(order.token, {
+      width: 300,
+      margin: 2,
+      color: { dark: "#1D150D", light: "#FFFFFF" },
+    }),
+    getFont(),
+  ])
 
   const textLines = [
     { text: "FICHA ESPETÃO DO TERCEIRÃO", size: 28, weight: "bold" as const },
@@ -41,6 +54,7 @@ export async function generateTicket(order: Order, eventDate: string): Promise<B
   const textHeight = textLines.reduce((acc, l) => acc + (l.text ? lineHeight : 16), 0)
   const height = padding * 2 + textHeight + qrSize + 40
 
+  const style = `<style>@font-face{font-family:'T';src:url(data:font/woff2;base64,${fontData}) format('woff2')}text{font-family:'T',sans-serif}</style>`
   const svgRects = `<rect width="${width}" height="${height}" fill="#1D150D" rx="20"/><rect x="4" y="4" width="${width - 8}" height="${height - 8}" fill="none" stroke="#8B5E3C" stroke-width="2" rx="18"/>`
   const svgText = textLines
     .map((l, i) => {
@@ -49,7 +63,7 @@ export async function generateTicket(order: Order, eventDate: string): Promise<B
       const weight = l.weight || "normal"
       const fontSize = l.size
       return l.text
-        ? `<text x="${width / 2}" y="${y}" font-family="DejaVu Sans, sans-serif" font-size="${fontSize}" font-weight="${weight}" fill="${color}" text-anchor="middle">${escapeXml(l.text)}</text>`
+        ? `<text x="${width / 2}" y="${y}" font-size="${fontSize}" font-weight="${weight}" fill="${color}" text-anchor="middle">${escapeXml(l.text)}</text>`
         : ""
     })
     .join("")
@@ -58,6 +72,7 @@ export async function generateTicket(order: Order, eventDate: string): Promise<B
   const qrY = height - padding - qrSize
 
   const svgContent = `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
+    ${style}
     ${svgRects}
     ${svgText}
   </svg>`

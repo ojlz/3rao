@@ -23,11 +23,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Pedido já processado" }, { status: 400 })
     }
 
-    await updateOrder(orderId, {
-      status: "approved",
-      approvedAt: new Date().toISOString(),
-    })
-
     const ticketBuffer = await generateTicket(order, EVENT_DATE)
 
     await saveTicket({
@@ -43,7 +38,11 @@ export async function POST(request: Request) {
 
     await saveTicketImage(order.token, ticketBuffer)
 
-    await updateOrder(orderId, { whatsappSent: false })
+    await updateOrder(orderId, {
+      status: "approved",
+      approvedAt: new Date().toISOString(),
+      whatsappSent: false,
+    })
 
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || `${request.headers.get("origin") || "http://localhost:3000"}`
     const trackingUrl = `${baseUrl}/pedido/${order.id}?token=${order.token}`

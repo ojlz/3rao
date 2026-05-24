@@ -330,6 +330,10 @@ export default function Home() {
       setError("Telefone inválido (DDD + 9 dígitos)")
       return
     }
+    if (!customerEmail.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
+      setError("Digite um e-mail válido")
+      return
+    }
     if (cart.size === 0) {
       setError("Carrinho vazio")
       return

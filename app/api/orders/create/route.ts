@@ -23,7 +23,10 @@ export async function POST(request: Request) {
     if (!customerPhone || !customerPhone.replace(/\D/g, "").match(/^\d{10,11}$/)) {
       return NextResponse.json({ error: "Telefone inválido" }, { status: 400 })
     }
-    if (customerEmail && customerEmail.length > 200) {
+    if (!customerEmail || !customerEmail.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
+      return NextResponse.json({ error: "E-mail inválido" }, { status: 400 })
+    }
+    if (customerEmail.length > 200) {
       return NextResponse.json({ error: "E-mail muito longo" }, { status: 400 })
     }
     if (!items || !Array.isArray(items) || items.length === 0) {
