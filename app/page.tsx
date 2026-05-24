@@ -11,7 +11,7 @@ function formatPrice(cents: number): string {
 
 function LoadingScreen() {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#1D150D]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-dark">
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -24,7 +24,7 @@ function LoadingScreen() {
         >
           <Scale className="w-7 h-7 text-bege" />
         </motion.div>
-        <h1 className="text-3xl font-bold text-bege mb-2">Espetão do Terceirão</h1>
+        <h1 className="text-3xl font-bold text-bege mb-2 text-balance tracking-tight">Espetão do Terceirão</h1>
         <p className="text-sm text-marrom mb-4">Terceirão</p>
         <div className="flex gap-2 justify-center">
           <motion.div className="w-3 h-3 bg-bordo rounded-full loading-dot" />
@@ -64,7 +64,7 @@ function EmailInput({ value, onChange }: { value: string; onChange: (v: string) 
           </motion.div>
         )}
       </div>
-      <p className="text-[11px] text-marrom mt-1">Coloque o email para receber sua ficha</p>
+
       {value.length > 0 && !isValid && (
         <p className="text-xs text-red-400 mt-1">Digite um e-mail válido</p>
       )}
@@ -330,10 +330,6 @@ export default function Home() {
       setError("Telefone inválido (DDD + 9 dígitos)")
       return
     }
-    if (!customerEmail.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
-      setError("Digite um e-mail válido")
-      return
-    }
     if (cart.size === 0) {
       setError("Carrinho vazio")
       return
@@ -371,6 +367,7 @@ export default function Home() {
       setCart(new Map())
 
       sessionStorage.setItem(`order_token_${data.orderId}`, data.token)
+      localStorage.setItem(`order_token_${data.orderId}`, data.token)
       const link = `${window.location.origin}/pedido/${data.orderId}?token=${data.token}`
       try {
         await navigator.clipboard.writeText(link)
@@ -386,14 +383,14 @@ export default function Home() {
 
   return (
     <div className="min-h-screen pb-32">
-      <header className="sticky top-0 z-40 bg-[#1D150D]/95 backdrop-blur-sm border-b border-marrom/30">
+      <header className="sticky top-0 z-40 bg-dark/95 backdrop-blur-sm border-b border-marrom/30">
         <div className="max-w-lg mx-auto px-4 py-3 flex items-center justify-between">
           <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }}>
             <div className="flex items-center gap-2">
               <Scale className="w-4 h-4 text-bordo" />
-              <h1 className="text-lg font-bold text-bege">Espetão do Terceirão</h1>
+              <h1 className="text-lg font-bold text-bege tracking-tight">Espetão do Terceirão</h1>
             </div>
-            <p className="text-[10px] text-marrom tracking-wide uppercase">Pré-venda · Terceirão</p>
+            <p className="text-[10px] text-marrom tracking-[0.15em] uppercase">Pré-venda · Terceirão</p>
           </motion.div>
           <div className="flex items-center gap-2">
             <motion.a
@@ -431,7 +428,7 @@ export default function Home() {
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
             <div className="flex items-center gap-2 mb-4">
               <Scale className="w-4 h-4 text-bordo" />
-              <h2 className="text-lg font-semibold text-bege">Cardápio</h2>
+              <h2 className="text-lg font-semibold text-bege tracking-tight">Cardápio</h2>
             </div>
 
             <div className="flex gap-2 mb-4 overflow-x-auto pb-1 scrollbar-none">
@@ -472,7 +469,7 @@ export default function Home() {
               ))}
               {!category && grouped && grouped.map(([cat, prods]) => (
                 <div key={cat}>
-                  <h3 className="text-sm font-semibold text-marrom uppercase tracking-wide mb-3 capitalize">{cat}</h3>
+                  <h3 className="text-sm font-semibold text-marrom uppercase tracking-[0.12em] mb-3 capitalize">{cat}</h3>
                   <div className="grid gap-3">
                     {prods.map((product, index) => (
                       <ProductCard
@@ -508,7 +505,7 @@ export default function Home() {
               <ChevronRight className="w-4 h-4 rotate-180" />
               Continuar comprando
             </button>
-            <h2 className="text-lg font-semibold text-bege mb-4">Carrinho</h2>
+            <h2 className="text-lg font-semibold text-bege mb-4 tracking-tight">Carrinho</h2>
             <AnimatePresence>
               {cart.size === 0 ? (
                 <motion.p
@@ -596,7 +593,7 @@ export default function Home() {
               <ChevronRight className="w-4 h-4 rotate-180" />
               Voltar
             </button>
-            <h2 className="text-lg font-semibold text-bege mb-4">Seus dados</h2>
+            <h2 className="text-lg font-semibold text-bege mb-4 tracking-tight">Seus dados</h2>
             <div className="space-y-4">
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
@@ -698,7 +695,7 @@ export default function Home() {
               >
                 <Check className="w-8 h-8 text-green-400" />
               </motion.div>
-              <h2 className="text-xl font-bold text-bege">Pedido Criado!</h2>
+              <h2 className="text-xl font-bold text-bege tracking-tight">Pedido criado</h2>
               <p className="text-marrom text-sm mt-0.5">Pedido #{orderResult.orderId}</p>
               {copied && (
                 <motion.p
@@ -806,7 +803,7 @@ export default function Home() {
             <div className="w-16 h-16 bg-red-400/20 rounded-full flex items-center justify-center mx-auto mb-4">
               <span className="text-2xl text-red-400">✕</span>
             </div>
-            <h2 className="text-xl font-bold text-bege">Pedido cancelado</h2>
+            <h2 className="text-xl font-bold text-bege tracking-tight">Pedido cancelado</h2>
             <p className="text-marrom text-sm mt-2">Se você pagou o PIX, entre em contato para reembolso.</p>
             <button onClick={() => setStep("products")} className="btn-primary mt-6">
               Novo Pedido

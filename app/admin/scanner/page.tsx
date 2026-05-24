@@ -140,7 +140,7 @@ export default function AdminScanner() {
 
   return (
     <div className="min-h-screen">
-      <header className="sticky top-0 z-40 bg-[#1D150D]/95 backdrop-blur-sm border-b border-marrom/30">
+      <header className="sticky top-0 z-40 bg-dark/95 backdrop-blur-sm border-b border-marrom/30">
         <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
           <h1 className="text-lg font-bold text-bege">Scanner QR</h1>
           <nav className="flex gap-2 text-xs items-center">
@@ -181,7 +181,7 @@ export default function AdminScanner() {
 
             <div className="relative">
               <div className="border-t border-marrom/30 my-6" />
-              <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#1D150D] px-3 text-xs text-marrom">ou digite o token</span>
+              <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-dark px-3 text-xs text-marrom">ou digite o token</span>
             </div>
 
             <div className="flex flex-col sm:flex-row gap-2">

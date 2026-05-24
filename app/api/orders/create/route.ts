@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server"
 import { createOrder, getProduct } from "@/lib/store"
-import { sendOrderConfirmation, notifyAdminNewOrder } from "@/lib/email"
 import { notifyAdminsNewOrder } from "@/lib/push"
 import type { OrderItem } from "@/types"
 
@@ -23,10 +22,7 @@ export async function POST(request: Request) {
     if (!customerPhone || !customerPhone.replace(/\D/g, "").match(/^\d{10,11}$/)) {
       return NextResponse.json({ error: "Telefone inválido" }, { status: 400 })
     }
-    if (!customerEmail || !customerEmail.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
-      return NextResponse.json({ error: "E-mail inválido" }, { status: 400 })
-    }
-    if (customerEmail.length > 200) {
+    if (customerEmail && customerEmail.length > 200) {
       return NextResponse.json({ error: "E-mail muito longo" }, { status: 400 })
     }
     if (!items || !Array.isArray(items) || items.length === 0) {
@@ -66,35 +62,7 @@ export async function POST(request: Request) {
       totalPrice
     )
 
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || `${request.headers.get("origin") || "http://localhost:3000"}`
-    const trackingUrl = `${baseUrl}/pedido/${order.id}?token=${order.token}`
-    const adminUrl = `${baseUrl}/admin/dashboard`
-
-    const emailResults = await Promise.allSettled([
-      sendOrderConfirmation(
-        order.customerEmail,
-        order.id,
-        order.customerName,
-        order.totalPrice,
-        process.env.PIX_KEY || "espetodoterceirao@pix.com",
-        (order.totalPrice / 100).toFixed(2),
-        order.token,
-        trackingUrl
-      ),
-      notifyAdminNewOrder(
-        order.customerName,
-        order.customerPhone,
-        order.customerEmail,
-        order.id,
-        order.totalPrice,
-        adminUrl
-      ),
-      notifyAdminsNewOrder(order.id, order.customerName, order.totalPrice),
-    ])
-
-    emailResults.forEach((r, i) => {
-      if (r.status === "rejected") console.error("Email", i, "rejected:", r.reason)
-    })
+    notifyAdminsNewOrder(order.id, order.customerName, order.totalPrice)
 
     return NextResponse.json({
       orderId: order.id,

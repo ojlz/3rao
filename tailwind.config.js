@@ -13,7 +13,7 @@ module.exports = {
         bordo: "#6B1D2A",
       },
       fontFamily: {
-        sans: ["Inter", "system-ui", "sans-serif"],
+        sans: ["Outfit", "system-ui", "sans-serif"],
       },
     },
   },

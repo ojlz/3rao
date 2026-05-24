@@ -133,7 +133,7 @@ export default function AdminProducts() {
 
   return (
     <div className="min-h-screen">
-      <header className="sticky top-0 z-40 bg-[#1D150D]/95 backdrop-blur-sm border-b border-marrom/30">
+      <header className="sticky top-0 z-40 bg-dark/95 backdrop-blur-sm border-b border-marrom/30">
         <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
           <h1 className="text-lg font-bold text-bege">Produtos</h1>
           <nav className="flex gap-2 text-xs items-center">

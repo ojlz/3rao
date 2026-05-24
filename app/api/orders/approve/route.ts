@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server"
-import { getOrder, updateOrder, saveTicket, saveTicketImage, getTicketImage } from "@/lib/store"
+import { getOrder, updateOrder, saveTicket, saveTicketImage } from "@/lib/store"
 import { generateTicket } from "@/services/ticketGenerator"
-import { sendOrderApproved } from "@/lib/email"
 import { checkAuth } from "@/lib/auth"
 
 const EVENT_DATE = process.env.EVENT_DATE || "3 de junho"
@@ -44,21 +43,6 @@ export async function POST(request: Request) {
     await saveTicketImage(order.token, ticketBuffer)
 
     await updateOrder(orderId, { whatsappSent: false })
-
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || `${request.headers.get("origin") || "http://localhost:3000"}`
-    const trackingUrl = `${baseUrl}/pedido/${order.id}?token=${order.token}`
-
-    const ticketImageBuffer = await getTicketImage(order.token)
-    const ticketImageBase64 = ticketImageBuffer?.toString("base64") || ""
-
-    await sendOrderApproved(
-      order.customerEmail,
-      order.id,
-      order.customerName,
-      order.token,
-      ticketImageBase64,
-      trackingUrl
-    )
 
     return NextResponse.json({
       success: true,

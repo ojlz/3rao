@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
-import { CheckCircle, Clock, Package, DollarSign, Trash2, RotateCcw, X, Scale, Mail, Plus, Trash } from "lucide-react"
+import { CheckCircle, Clock, Package, DollarSign, Trash2, RotateCcw, X, Scale } from "lucide-react"
 import type { Order } from "@/types"
 
 function formatPrice(cents: number): string {
@@ -26,8 +26,6 @@ export default function AdminDashboard() {
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
   const [toast, setToast] = useState<{ orderId: string; name: string } | null>(null)
-  const [adminEmails, setAdminEmails] = useState<string[]>([])
-  const [newAdminEmail, setNewAdminEmail] = useState("")
   const router = useRouter()
 
   useEffect(() => {
@@ -38,8 +36,6 @@ export default function AdminDashboard() {
           router.push("/admin/login")
         } else {
           setAuthenticated(true)
-          fetchOrders()
-          fetchAdminEmails()
         }
       })
   }, [router])
@@ -54,6 +50,27 @@ export default function AdminDashboard() {
         if (permission === "granted") subscribePush()
       })
     }
+  }, [authenticated])
+
+  useEffect(() => {
+    if (!authenticated) return
+
+    const es = new EventSource("/api/admin/orders/stream")
+
+    es.onmessage = (event) => {
+      try {
+        setOrders(JSON.parse(event.data))
+      } catch {
+        // ignore parse errors
+      }
+      setLoading(false)
+    }
+
+    es.onerror = () => {
+      // EventSource auto-reconnects
+    }
+
+    return () => es.close()
   }, [authenticated])
 
   async function subscribePush() {
@@ -116,32 +133,6 @@ export default function AdminDashboard() {
     if (res.ok) fetchOrders()
   }
 
-  async function fetchAdminEmails() {
-    try {
-      const res = await fetch("/api/admin/emails")
-      const data = await res.json()
-      setAdminEmails(data.emails || [])
-    } catch {}
-  }
-
-  async function addEmail() {
-    if (!newAdminEmail.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) return
-    const res = await fetch("/api/admin/emails", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: newAdminEmail }),
-    })
-    if (res.ok) {
-      setNewAdminEmail("")
-      fetchAdminEmails()
-    }
-  }
-
-  async function removeEmail(email: string) {
-    const res = await fetch(`/api/admin/emails?email=${encodeURIComponent(email)}`, { method: "DELETE" })
-    if (res.ok) fetchAdminEmails()
-  }
-
   useEffect(() => {
     if (!toast) return
     const timer = setTimeout(() => setToast(null), 5000)
@@ -157,7 +148,7 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-screen pb-20">
-      <header className="sticky top-0 z-40 bg-[#1D150D]/95 backdrop-blur-sm border-b border-marrom/30">
+      <header className="sticky top-0 z-40 bg-dark/95 backdrop-blur-sm border-b border-marrom/30">
         <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Scale className="w-4 h-4 text-bordo" />
@@ -259,47 +250,7 @@ export default function AdminDashboard() {
           </div>
         )}
 
-        <div className="mt-12 pt-6 border-t border-marrom/20">
-          <div className="mb-6">
-            <h3 className="text-bege font-semibold text-sm mb-3 flex items-center gap-2">
-              <Mail className="w-4 h-4" />
-              Admins notificados por e-mail
-            </h3>
-            <div className="flex gap-2 mb-3">
-              <input
-                type="email"
-                value={newAdminEmail}
-                onChange={(e) => setNewAdminEmail(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && addEmail()}
-                placeholder="email@exemplo.com"
-                className="flex-1 text-sm"
-              />
-              <button
-                onClick={addEmail}
-                className="w-10 h-10 bg-bordo rounded-xl flex items-center justify-center hover:bg-bordo/80 shrink-0"
-              >
-                <Plus className="w-4 h-4 text-white" />
-              </button>
-            </div>
-            <div className="space-y-2">
-              {adminEmails.length === 0 && (
-                <p className="text-marrom text-xs">Nenhum email cadastrado</p>
-              )}
-              {adminEmails.map((email) => (
-                <div key={email} className="flex items-center justify-between bg-marrom/10 rounded-lg px-3 py-2">
-                  <span className="text-bege text-sm">{email}</span>
-                  <button
-                    onClick={() => removeEmail(email)}
-                    className="text-red-400/60 hover:text-red-400"
-                  >
-                    <Trash className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <button
+        <button
             onClick={async () => {
               if (!confirm("Tem certeza? Isso vai apagar TODOS os pedidos e fichas. Os produtos não serão afetados.")) return
               if (!confirm("Essa ação não pode ser desfeita. Continuar?")) return
@@ -315,7 +266,6 @@ export default function AdminDashboard() {
             <Trash2 className="w-3.5 h-3.5" />
             Resetar pedidos e fichas
           </button>
-        </div>
       </main>
 
       <AnimatePresence>

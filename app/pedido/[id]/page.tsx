@@ -27,7 +27,7 @@ function copyToClipboard(text: string): Promise<boolean> {
 }
 
 function getOrderUrl(orderId: string): string {
-  const token = sessionStorage.getItem(`order_token_${orderId}`)
+  const token = sessionStorage.getItem(`order_token_${orderId}`) || localStorage.getItem(`order_token_${orderId}`)
   if (!token) return `${window.location.origin}/pedido/${orderId}`
   return `${window.location.origin}/pedido/${orderId}?token=${token}`
 }
@@ -76,10 +76,11 @@ export default function OrderPage() {
       return
     }
 
-    let token = tokenFromUrl || sessionStorage.getItem(`order_token_${id}`)
+    let token = tokenFromUrl || sessionStorage.getItem(`order_token_${id}`) || localStorage.getItem(`order_token_${id}`)
 
     if (tokenFromUrl) {
       sessionStorage.setItem(`order_token_${id}`, tokenFromUrl)
+      localStorage.setItem(`order_token_${id}`, tokenFromUrl)
       token = tokenFromUrl
       window.history.replaceState({}, "", `/pedido/${id}`)
     }
@@ -143,7 +144,7 @@ export default function OrderPage() {
 
   return (
     <div className="min-h-screen">
-      <header className="sticky top-0 z-40 bg-[#1D150D]/95 backdrop-blur-sm border-b border-marrom/30">
+      <header className="sticky top-0 z-40 bg-dark/95 backdrop-blur-sm border-b border-marrom/30">
         <div className="max-w-lg mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Scale className="w-4 h-4 text-bordo" />
