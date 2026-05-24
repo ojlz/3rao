@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
 import { useParams } from "next/navigation"
 import { motion } from "framer-motion"
 import QRCode from "qrcode"
@@ -39,7 +39,99 @@ export default function OrderPage() {
   const [error, setError] = useState("")
   const [qrDataUrl, setQrDataUrl] = useState("")
   const [copied, setCopied] = useState(false)
+  const [downloading, setDownloading] = useState(false)
   const orderToken = useRef<string>("")
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+
+  function formatCurrency(value: number): string {
+    return `R$ ${(value / 100).toFixed(2).replace(".", ",")}`
+  }
+
+  const downloadTicket = useCallback(async () => {
+    if (!order || !qrDataUrl || !canvasRef.current) return
+    setDownloading(true)
+    const canvas = canvasRef.current
+    const ctx = canvas.getContext("2d")
+    if (!ctx) { setDownloading(false); return }
+
+    const lineHeight = 32
+    const padding = 40
+    const qrSize = 200
+    const width = 600
+    const textLines = [
+      { text: "FICHA ESPETÃO DO TERCEIRÃO", size: 28, weight: "bold" as const },
+      { text: "Terceirão", size: 16 },
+      { text: "", size: 12 },
+      { text: `Pedido: ${order.id}`, size: 18 },
+      { text: `Cliente: ${order.customerName}`, size: 18 },
+      { text: "", size: 12 },
+      { text: "ITENS:", size: 20, weight: "bold" as const },
+      ...order.items.map(
+        (item) =>
+          `${item.quantity}x ${item.productName}${item.complements.length > 0 ? ` (+${item.complements.join(", ")})` : ""}`
+      ).map((t: string) => ({ text: t, size: 16 })),
+      { text: "", size: 12 },
+      { text: `Total: ${formatCurrency(order.totalPrice)}`, size: 20, weight: "bold" as const },
+      { text: "", size: 8 },
+      { text: `Token: ${order.token}`, size: 14 },
+      { text: `Retirada: 3 de junho`, size: 14 },
+      { text: "", size: 16 },
+      { text: "RETIRADA SOMENTE DOS ITENS MOSTRADOS NO SISTEMA", size: 14, weight: "bold" as const },
+    ]
+    const textHeight = textLines.reduce((acc, l) => acc + (l.text ? lineHeight : 16), 0)
+    const height = padding * 2 + textHeight + qrSize + 40
+
+    canvas.width = width * 2
+    canvas.height = height * 2
+    ctx.scale(2, 2)
+
+    ctx.fillStyle = "#1D150D"
+    roundRect(ctx, 0, 0, width, height, 20)
+    ctx.fill()
+
+    ctx.strokeStyle = "#8B5E3C"
+    ctx.lineWidth = 2
+    roundRect(ctx, 4, 4, width - 8, height - 8, 18)
+    ctx.stroke()
+
+    let y = padding
+    for (const l of textLines) {
+      if (!l.text) { y += 16; continue }
+      y += lineHeight
+      ctx.fillStyle = "#E8D5B7"
+      ctx.font = `${l.weight === "bold" ? "bold " : ""}${l.size * 2}px Outfit, sans-serif`
+      ctx.textAlign = "center"
+      ctx.textBaseline = "middle"
+      ctx.fillText(l.text, width / 2, y - lineHeight / 2)
+    }
+    y += 12
+
+    const qrImg = new Image()
+    qrImg.src = qrDataUrl
+    await new Promise<void>((resolve) => { qrImg.onload = () => resolve() })
+    const qrY = height - padding - qrSize
+    ctx.drawImage(qrImg, (width - qrSize) / 2, qrY, qrSize, qrSize)
+
+    const link = document.createElement("a")
+    link.download = `ficha-${order.id}.png`
+    link.href = canvas.toDataURL("image/png")
+    link.click()
+    setDownloading(false)
+  }, [order, qrDataUrl])
+
+  function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
+    ctx.beginPath()
+    ctx.moveTo(x + r, y)
+    ctx.lineTo(x + w - r, y)
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r)
+    ctx.lineTo(x + w, y + h - r)
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h)
+    ctx.lineTo(x + r, y + h)
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r)
+    ctx.lineTo(x, y + r)
+    ctx.quadraticCurveTo(x, y, x + r, y)
+    ctx.closePath()
+  }
 
   function fetchOrder(id: string, token: string) {
     fetch(`/api/orders?id=${id}&token=${token}`)
@@ -239,16 +331,18 @@ export default function OrderPage() {
               <p className="text-[9px] text-marrom uppercase tracking-wide mb-0.5">Token</p>
               <p className="text-bege font-mono text-xs break-all select-all">{orderToken.current}</p>
             </div>
-            <a
-              href={`/api/ticket-image/${orderToken.current}`}
-              download={`ficha-${order.id}.png`}
-              className="btn-primary text-sm py-2 mt-3 inline-flex items-center justify-center gap-2 w-full"
+            <button
+              onClick={downloadTicket}
+              disabled={downloading}
+              className="btn-primary text-sm py-2 mt-3 inline-flex items-center justify-center gap-2 w-full disabled:opacity-50"
             >
               <Download className="w-4 h-4" />
-              Baixar ficha
-            </a>
+              {downloading ? "Gerando..." : "Baixar ficha"}
+            </button>
           </motion.div>
         )}
+
+        <canvas ref={canvasRef} className="hidden" />
 
         {order.status === "pending" && (
           <motion.div
