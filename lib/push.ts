@@ -46,9 +46,16 @@ export async function notifyAdminsNewOrder(
   })
 
   for (const raw of subscriptions) {
+    let sub: webpush.PushSubscription
     try {
-      const subscription = JSON.parse(raw)
-      await webpush.sendNotification(subscription, payload)
+      sub = JSON.parse(raw)
+      if (!sub.endpoint) throw new Error("Invalid subscription")
+    } catch {
+      await redis.srem(SUBSCRIPTIONS_KEY, raw)
+      continue
+    }
+    try {
+      await webpush.sendNotification(sub, payload)
     } catch (error: unknown) {
       if (error instanceof webpush.WebPushError) {
         if (error.statusCode === 410 || error.statusCode === 404) {
