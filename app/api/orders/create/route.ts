@@ -70,7 +70,7 @@ export async function POST(request: Request) {
     const trackingUrl = `${baseUrl}/pedido/${order.id}?token=${order.token}`
     const adminUrl = `${baseUrl}/admin/dashboard`
 
-    await Promise.allSettled([
+    const emailResults = await Promise.allSettled([
       sendOrderConfirmation(
         order.customerEmail,
         order.id,
@@ -91,6 +91,10 @@ export async function POST(request: Request) {
       ),
       notifyAdminsNewOrder(order.id, order.customerName, order.totalPrice),
     ])
+
+    emailResults.forEach((r, i) => {
+      if (r.status === "rejected") console.error("Email", i, "rejected:", r.reason)
+    })
 
     return NextResponse.json({
       orderId: order.id,

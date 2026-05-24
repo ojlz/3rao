@@ -6,38 +6,27 @@ export async function GET() {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 })
   }
 
-  const key = process.env.RESEND_API_KEY
-  if (!key) {
-    return NextResponse.json({ error: "RESEND_API_KEY não está configurada no Vercel" }, { status: 500 })
-  }
+  const key = process.env.BREVO_API_KEY
+  const fromEmail = process.env.BREVO_FROM_EMAIL
 
-  const masked = key.slice(0, 10) + "..." + key.slice(-4)
+  if (!key) return NextResponse.json({ error: "BREVO_API_KEY nao configurada" }, { status: 500 })
+  if (!fromEmail) return NextResponse.json({ error: "BREVO_FROM_EMAIL nao configurado" }, { status: 500 })
 
   try {
-    const res = await fetch("https://api.resend.com/emails", {
+    const res = await fetch("https://api.brevo.com/v3/smtp/email", {
       method: "POST",
-      headers: {
-        "Authorization": `Bearer ${key}`,
-        "Content-Type": "application/json",
-      },
+      headers: { "api-key": key, "Content-Type": "application/json" },
       body: JSON.stringify({
-        from: `${process.env.SMTP_FROM_NAME || "Teste"} <${process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev"}>`,
-        to: "feardeadx@gmail.com",
-        subject: "Teste - Espetao do Terceirao",
-        html: "<p>Se vc leu isso, o email funciona no Vercel!</p>",
+        sender: { email: fromEmail },
+        to: [{ email: "feardeadx@gmail.com" }],
+        subject: "Teste Brevo - Espetao do Terceirao",
+        htmlContent: "<p>Funcionou! Brevo no Vercel ✅</p>",
       }),
     })
 
     const text = await res.text()
-    return NextResponse.json({
-      status: res.status,
-      response: text,
-      keyMasked: masked,
-    })
+    return NextResponse.json({ status: res.status, response: text })
   } catch (error) {
-    return NextResponse.json({
-      error: String(error),
-      keyMasked: masked,
-    }, { status: 500 })
+    return NextResponse.json({ error: String(error) }, { status: 500 })
   }
 }
