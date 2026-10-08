@@ -50,7 +50,7 @@ function PhoneInput({ value, onChange }: { value: string; onChange: (v: string) 
           inputMode="numeric"
           value={display}
           onChange={handleChange}
-          placeholder="(67) 99999-9999"
+          placeholder="(00) 90000-0000"
           className={`${isValid && value.length > 0 ? "border-green-500/50" : ""}`}
         />
         {isValid && (

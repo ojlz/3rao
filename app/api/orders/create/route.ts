@@ -31,8 +31,8 @@ export async function POST(request: Request) {
       token: order.token,
       totalPrice: order.totalPrice,
       status: order.status,
-      pixKey: process.env.PIX_KEY || "espetodoterceirao@pix.com",
-      pixName: process.env.PIX_NAME || "Espetão do Terceirão",
+      pixKey: process.env.PIX_KEY || "pagamento.exemplo.ficticio@exemplo.test",
+      pixName: process.env.PIX_NAME || "Loja Modelo Fictícia — Demonstração",
       pixAmount: (order.totalPrice / 100).toFixed(2),
     })
   } catch (error) {
