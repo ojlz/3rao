@@ -32,7 +32,15 @@ Variáveis (`.env.local`, nunca commitado):
 | `PIX_KEY` | `pagamento.exemplo.ficticio@exemplo.test` (falsa) |
 | `PIX_NAME` | `Loja Modelo Fictícia — Demonstração` (falsa) |
 
-## Produtos fictícios de exemplo
+## Demo sem Redis (modo da Vercel)
+
+Sem `UPSTASH_*` configurado, o app liga um **modo demo**: cardápio fictício
+embutido (5 espetinhos + 2 refrigerantes + 1 combo) e pedidos/fichas em
+memória. Tudo funciona (pedir, pagar PIX falso, aprovar, ficha com QR),
+mas os dados zeram quando a instância esfria. Com Redis configurado, usa
+o banco normal (persistente) e o cardápio vem de lá.
+
+## Produtos fictícios de exemplo (com Redis)
 
 ```bash
 npm run seed:ficticio
