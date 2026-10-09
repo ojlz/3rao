@@ -1,5 +1,7 @@
 # 3rão — Pré-venda de espetinhos (demonstração com dados fictícios)
 
+🌐 **Demo no ar:** https://3rao.vercel.app *(cardápio vazio sem as envs do Redis — ver abaixo)*
+
 > **Aviso:** este repositório foi higienizado para portfólio. A chave PIX
 > é falsa (`pagamento.exemplo.ficticio@exemplo.test`, em nome de
 > “Loja Modelo Fictícia — Demonstração”) e **não leva a lugar nenhum**:
